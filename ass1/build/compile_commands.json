@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/mycoal/School/COMP371/ass1/build",
+  "command": "/usr/bin/g++ -g -o CMakeFiles/main.dir/src/main.cpp.o -c /home/mycoal/School/COMP371/ass1/src/main.cpp",
+  "file": "/home/mycoal/School/COMP371/ass1/src/main.cpp",
+  "output": "CMakeFiles/main.dir/src/main.cpp.o"
+}
+]
