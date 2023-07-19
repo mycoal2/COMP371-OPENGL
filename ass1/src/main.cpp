@@ -523,7 +523,7 @@ int main(int argc, char*argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL RIGHT
-                upperArmPos += vec3(0.1f, 0.0f, 0.0f);
+                upperArmPos += vec3(0.1f * cos(radians(upperArmRotationXAngle)), 0.0f, -0.1f * sin(radians(upperArmRotationXAngle)));
                 lowerArmPos = upperArmPos + lowerArmPosOffset;
                 racketHandlePos = lowerArmPos + racketHandlePosOffset;
                 racketPos = racketHandlePos + racketPosOffset;

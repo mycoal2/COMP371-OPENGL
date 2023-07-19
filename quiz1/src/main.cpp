@@ -274,7 +274,7 @@ int main(int argc, char*argv[])
     bool shift = false;
     int renderingMode = GL_TRIANGLES;
 
-    vec3 cameraPosition(0.0f, 15.0f, 40.0f);
+    vec3 cameraPosition(0.0f, 15.0f, 10.0f);
     vec3 cameraLookAt(0.0f, -5.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
     float cameraAngleX = 0.0f;
@@ -310,7 +310,7 @@ int main(int argc, char*argv[])
     int lastMouseLeftState = GLFW_RELEASE;
     double lastMousePosX, lastMousePosY;
     glfwGetCursorPos(window, &lastMousePosX, &lastMousePosY);
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
     float modelScale = 1;
@@ -348,37 +348,46 @@ int main(int argc, char*argv[])
         // glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         
-        //  ----------------------- Draw Grid 100x100 ------------------------
+        //  ----------------------- Draw Grid 78x36 ------------------------
         // Change shader Color to Yellow
-        tempColor[0] = 0.9f;        // Value for Red
-        tempColor[1] = 0.9f;        // Value for Green
-        tempColor[2] = 0.0f;        // Value for Blue
+        tempColor[0] = 0.4f;        // Value for Red
+        tempColor[1] = 1.0f;        // Value for Green
+        tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        for(float x = -50; x < 50; x++) {
+        GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+        // DRAWING 78 LINES 
+        for(float x = -39; x < 39; x++) { 
             // glUseProgram(shaderProgram2);
-            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
-            GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) * scale(mat4(1.0f), vec3(0.05f, 0.05f, 36.0f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
 
             // glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-            
-            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
+        }
+        // DRAWING 36 LINES
+        for(float x = -18; x < 18; x++) {
+            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) * scale(mat4(1.0f), vec3(78.0f, 0.05f, 0.05f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
 
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
         }
+        tempColor[0] = 0.4f;        // Value for Red
+        tempColor[1] = 1.0f;        // Value for Green
+        tempColor[2] = 0.4f;        // Value for Blue
+        glUniform3fv(colorLocation, 1, tempColor);
+        mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) * scale(mat4(1.0f), vec3(78.0f, 0.05f, 36.0f));
+        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
 
 
         // -------------------- COORDINATE AXIS ----------------------------------
-        tempColor[0] = 1.0f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 1.0f;        // Value for Blue
+        tempColor[0] = 0.5f;        // Value for Red
+        tempColor[1] = 0.71f;        // Value for Green
+        tempColor[2] = 0.86f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // THIS IS 1 UNIT 
         // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-        mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
-        GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+        mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 20.0f, 0.0f)) * scale(mat4(1.0f), vec3(78.0f, 50.0f, 36.0f));
+        // GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
         // -------------------- X AXIS -------------------------------------------

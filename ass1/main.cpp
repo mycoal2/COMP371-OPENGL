@@ -18,7 +18,7 @@
 #include <glm/glm.hpp>  // GLM is an optimized math library with syntax to similar to OpenGL Shading Language
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
 
-#include<random>       // RANDOM NUMBER GENERATOR
+#include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
 using namespace glm;
 
@@ -55,17 +55,6 @@ const char* getFragmentShaderSource()
                 "void main()"
                 "{"
                 "   FragColor = vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
-                "}";
-}
-const char* getFragmentShaderSource2()
-{
-    return
-                "#version 330 core\n"
-                "in vec3 vertexColor;"
-                "out vec4 FragColor;"
-                "void main()"
-                "{"
-                "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);"
                 "}";
 }
 
@@ -158,7 +147,7 @@ int createVertexBufferObject()
 }
 
 
-int compileAndLinkShaders(int a)
+int compileAndLinkShaders()
 {
     // compile and link shader program
     // return shader program id
@@ -167,16 +156,9 @@ int compileAndLinkShaders(int a)
     // vertex shader
     const char* tempShaderSource;
     const char* tempFragmentShader;
-    if (a == 1) {
-        tempShaderSource = getVertexShaderSource();
-        tempFragmentShader = getFragmentShaderSource();
-    } else if(a == 2) {
-        tempShaderSource = getVertexShaderSource();
-        tempFragmentShader = getFragmentShaderSource2();
-    } else {
-        tempShaderSource = getVertexShaderSource();
-        tempFragmentShader = getFragmentShaderSource();
-    }
+    tempShaderSource = getVertexShaderSource();
+    tempFragmentShader = getFragmentShaderSource();
+
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     const char* vertexShaderSource = tempShaderSource;
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -244,8 +226,8 @@ int main(int argc, char*argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    // Create Window and rendering context using GLFW, resolution is 800x600
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Comp371 - Assignment 1", NULL, NULL);
+    // Create Window and rendering context using GLFW, resolution is 1024x768
+    GLFWwindow* window = glfwCreateWindow(1024, 768, "Comp371 - Quiz 1", NULL, NULL);
     if (window == NULL)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -266,8 +248,7 @@ int main(int argc, char*argv[])
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
     // Compile and link shaders here ...
-    int shaderProgram = compileAndLinkShaders(1);
-    // int shaderProgram2 = compileAndLinkShaders(2);
+    int shaderProgram = compileAndLinkShaders();
     glUseProgram(shaderProgram);
 
     bool keyPressed = false;
@@ -284,8 +265,6 @@ int main(int argc, char*argv[])
     float cameraSpeed = 1.0f;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
-    // Define and upload geometry to the GPU here ...
-
 
     float fov = 70.0f;
     // Set projection matrix for shader, this won't change
@@ -422,7 +401,7 @@ int main(int argc, char*argv[])
         mat4 upperArmWorldMatrix = translate(mat4(1.0f), modelScale * upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), modelScale * vec3(12.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-
+ 
         // ------------------ LOWER ARM ------------------------------------------
         tempColor[0] = 0.7f;        // Value for Red
         tempColor[1] = 0.6f;        // Value for Green
@@ -440,7 +419,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketHandleWorldMatrix = translate(mat4(1.0f), modelScale * (lowerArmPos + racketHandlePosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), modelScale * vec3(0.75f, 8.0f, 0.75f));
+       mat4 racketHandleWorldMatrix = translate(mat4(1.0f), modelScale * (lowerArmPos + racketHandlePosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), modelScale * vec3(0.75f, 8.0f, 0.75f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -515,7 +494,7 @@ int main(int argc, char*argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
             if(shift) {                                         // MOVE MODEL LEFT
-                upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
+               upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
                 lowerArmPos = upperArmPos + lowerArmPosOffset;
                 racketHandlePos = lowerArmPos + racketHandlePosOffset;
                 racketPos = racketHandlePos + racketPosOffset;
@@ -529,7 +508,7 @@ int main(int argc, char*argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL RIGHT
-                upperArmPos += vec3(0.1f, 0.0f, 0.0f);
+                upperArmPos += vec3(0.1f * cos(radians(upperArmRotationXAngle)), 0.0f, -0.1f * sin(radians(upperArmRotationXAngle)));
                 lowerArmPos = upperArmPos + lowerArmPosOffset;
                 racketHandlePos = lowerArmPos + racketHandlePosOffset;
                 racketPos = racketHandlePos + racketPosOffset;
