@@ -274,9 +274,12 @@ int main(int argc, char*argv[])
     bool shift = false;
     int renderingMode = GL_TRIANGLES;
 
-    vec3 cameraPosition(0.0f, 15.0f, 20.0f);
+    vec3 cameraPosition(0.0f, 15.0f, 40.0f);
     vec3 cameraLookAt(0.0f, -5.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
+    float cameraAngleX = 0.0f;
+    float cameraAngleY = 0.0f;
+    float cameraAngleZ = 0.0f;
 
     float cameraSpeed = 1.0f;
     float cameraHorizontalAngle = 90.0f;
@@ -478,13 +481,15 @@ int main(int argc, char*argv[])
         // ------------------------------------------------------------------------------------
         // ------------------------------ Handle inputs ---------------------------------------
         // ------------------------------------------------------------------------------------
-
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);
+        }
         // ------------------------------ REPOSITION MODEL ------------------------------------
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
-                float randomX = randomInRange(-40.0f, 40.0f);
+                float randomX = randomInRange(-25.0f, 25.0f);
                 float randomY = randomInRange(5.0f, 15.0f);
-                float randomZ = randomInRange(-40.0f, 40.0f);
+                float randomZ = randomInRange(-25.0f, 25.0f);
 
                 upperArmPos = vec3(randomX, randomY, randomZ);
                 lowerArmPos = upperArmPos + lowerArmPosOffset;
@@ -517,9 +522,9 @@ int main(int argc, char*argv[])
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
             upperArmRotationXAngle  += 5.0;
             lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPos = racketHandlePos + racketPosOffset;
+            // lowerArmPos = upperArmPos + lowerArmPosOffset;
+            // racketHandlePos = lowerArmPos + racketHandlePosOffset;
+            // racketPos = racketHandlePos + racketPosOffset;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -555,42 +560,36 @@ int main(int argc, char*argv[])
             }
         }
         // ------------------------------ CHANGE WORLD ORIENTATION --------------------------------
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
+            // cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
+            cameraAngleX += 1.0f;
 
-        
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, true);
         }
-        // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
-        //     cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
-        // }
-        // if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {     // move camera to the right
-        //     cameraPosition += cameraSideVector * currentCameraSpeed * dt;
-        // }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {     // move camera to the right
+            // cameraPosition += cameraSideVector * currentCameraSpeed * dt;
+            cameraAngleX -= 1.0f;
+        }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {      // move camera back
-            cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
+            // cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
+            cameraAngleY -= 1.0f;
         }
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {        // move camera forward
-            cameraPosition += cameraLookAt * currentCameraSpeed * dt;
+            // cameraPosition += cameraLookAt * currentCameraSpeed * dt;
+            cameraAngleY += 1.0f;
         }
-        if (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {       // move camera up
-            cameraPosition += cameraUp * (currentCameraSpeed/2) * dt;
-        }        
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {      // move camera down
-            cameraPosition -= cameraUp * (currentCameraSpeed/2) * dt;
-        }
+        // if (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {       // move camera up
+        //     cameraPosition += cameraUp * (currentCameraSpeed/2) * dt;
+        // }        
+        // if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {      // move camera down
+        //     cameraPosition -= cameraUp * (currentCameraSpeed/2) * dt;
+        // }
 
         if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) // ZOOM OUT
         {
-            upperArmRotationXAngle = 0;
-            upperArmRotationYAngle = 0;
-            upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-            upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-            lowerArmPosOffset = vec3(6 * cos(upperArmRotationXAngle ), 4.0f, 6 * sin(upperArmRotationXAngle ));
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPosOffset = vec3(0.0f, 8.0f, 0.0f);
-            racketPos = racketHandlePos + racketPosOffset;
+            cameraAngleX = 0.0f;
+            cameraAngleY = 0.0f;
+            cameraAngleZ = 0.0f;
+
         }
 
 
@@ -653,7 +652,7 @@ int main(int argc, char*argv[])
         }
 
         mat4 viewMatrix = mat4(1.0);
-        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
+        viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp) * rotate(mat4(1.0f), radians(cameraAngleX), vec3(0.0f, 1.0f, 0.0f)) *  rotate(mat4(1.0f), radians(cameraAngleY), vec3(1.0f, 0.0f, 0.0f));
         GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
         glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
     }
