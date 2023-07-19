@@ -501,9 +501,9 @@ int main(int argc, char*argv[])
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
             upperArmRotationXAngle  += 5.0;
             lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-            // lowerArmPos = upperArmPos + lowerArmPosOffset;
-            // racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            // racketPos = racketHandlePos + racketPosOffset;
+            lowerArmPos = upperArmPos + lowerArmPosOffset;
+            racketHandlePos = lowerArmPos + racketHandlePosOffset;
+            racketPos = racketHandlePos + racketPosOffset;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -542,7 +542,6 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
             // cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
             cameraAngleX += 1.0f;
-
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {     // move camera to the right
             // cameraPosition += cameraSideVector * currentCameraSpeed * dt;
@@ -568,7 +567,6 @@ int main(int argc, char*argv[])
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
             cameraAngleZ = 0.0f;
-
         }
 
 
