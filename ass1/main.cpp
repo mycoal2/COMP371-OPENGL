@@ -314,7 +314,7 @@ int main(int argc, char*argv[])
     float upperArmRotationXAngle = 0;
     float upperArmRotationYAngle = 0;
     vec3 upperArmPos = vec3(0.0f, 6.0f, 0.0f);
-    vec3 lowerArmPosOffset = vec3(5 * cos(upperArmRotationXAngle ), 6.5f, 5 * sin(upperArmRotationXAngle ));
+    vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
     vec3 lowerArmPos = upperArmPos + lowerArmPosOffset;
     vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
     vec3 racketHandlePos = lowerArmPos + racketHandlePosOffset;
@@ -416,7 +416,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.6f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-        mat4 upperArmWorldMatrix = translate(mat4(1.0f), modelScale * upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle ), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), modelScale * vec3(12.0f, 2.0f, 2.0f));
+        mat4 upperArmWorldMatrix = translate(mat4(1.0f), modelScale * upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), modelScale * vec3(12.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -426,7 +426,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.5f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 lowerArmWorldMatrix = translate(mat4(1.0f), modelScale * lowerArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), modelScale * vec3(1.5f, 8.0f, 1.5f));
+        mat4 lowerArmWorldMatrix = rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), modelScale * lowerArmPos) * scale(mat4(1.0f), modelScale * vec3(1.5f, 8.0f, 1.5f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -436,7 +436,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketHandleWorldMatrix = translate(mat4(1.0f), modelScale * racketHandlePos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), modelScale * vec3(0.75f, 8.0f, 0.75f));
+        mat4 racketHandleWorldMatrix = rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), modelScale * racketHandlePos) * scale(mat4(1.0f), modelScale * vec3(0.75f, 8.0f, 0.75f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -447,7 +447,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketWorldMatrix = translate(mat4(1.0f), modelScale * racketPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), modelScale * vec3(5.0f, 8.0f, 1.0f));
+        mat4 racketWorldMatrix = rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), modelScale * racketPos) * scale(mat4(1.0f), modelScale * vec3(5.0f, 8.0f, 1.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -515,7 +515,7 @@ int main(int argc, char*argv[])
                 racketPos = racketHandlePos + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
             upperArmRotationXAngle  += 5.0;
-            lowerArmPosOffset = vec3(5 * cos(radians(upperArmRotationXAngle )), 6.5f, -5 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
             lowerArmPos = upperArmPos + lowerArmPosOffset;
             racketHandlePos = lowerArmPos + racketHandlePosOffset;
             racketPos = racketHandlePos + racketPosOffset;
@@ -529,7 +529,7 @@ int main(int argc, char*argv[])
                 racketPos = racketHandlePos + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE CLOCKWISE
             upperArmRotationXAngle  -= 5.0;
-            lowerArmPosOffset = vec3(5 * cos(radians(upperArmRotationXAngle )), 6.5f, -5 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
             lowerArmPos = upperArmPos + lowerArmPosOffset;
             racketHandlePos = lowerArmPos + racketHandlePosOffset;
             racketPos = racketHandlePos + racketPosOffset;
