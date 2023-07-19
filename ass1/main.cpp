@@ -313,8 +313,8 @@ int main(int argc, char*argv[])
     float modelScale = 1;
     float upperArmRotationXAngle = 0;
     float upperArmRotationYAngle = 0;
-    vec3 upperArmPos = vec3(0.0f, 5.0f, 0.0f);
-    vec3 lowerArmPosOffset = vec3(6 * cos(upperArmRotationXAngle ), 4.0f, 6 * sin(upperArmRotationXAngle ));
+    vec3 upperArmPos = vec3(0.0f, 6.0f, 0.0f);
+    vec3 lowerArmPosOffset = vec3(5 * cos(upperArmRotationXAngle ), 6.5f, 5 * sin(upperArmRotationXAngle ));
     vec3 lowerArmPos = upperArmPos + lowerArmPosOffset;
     vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
     vec3 racketHandlePos = lowerArmPos + racketHandlePosOffset;
@@ -378,7 +378,6 @@ int main(int argc, char*argv[])
         GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
-
         // -------------------- X AXIS -------------------------------------------
         tempColor[0] = 1.0f;        // Value for Red
         tempColor[1] = 0.0f;        // Value for Green
@@ -386,7 +385,6 @@ int main(int argc, char*argv[])
         glUniform3fv(colorLocation, 1, tempColor);
         
         mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
-        gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
@@ -418,7 +416,7 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.6f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-        mat4 upperArmWorldMatrix = translate(mat4(1.0f), modelScale * upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle ), vec3(0.0f, 1.0f, 0.0f)) * scale(mat4(1.0f), modelScale * vec3(12.0f, 2.0f, 2.0f));
+        mat4 upperArmWorldMatrix = translate(mat4(1.0f), modelScale * upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle ), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), modelScale * vec3(12.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -480,7 +478,6 @@ int main(int argc, char*argv[])
         // ------------------------------ Handle inputs ---------------------------------------
         // ------------------------------------------------------------------------------------
 
-        shift = false;
         // ------------------------------ REPOSITION MODEL ------------------------------------
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
@@ -506,6 +503,10 @@ int main(int argc, char*argv[])
             modelScale -= 0.01;
         }
         // ------------------------------ UPDATE MODEL POSITION --------------------------------
+        shift = false;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) { 
+            shift = true;
+        }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
             if(shift) {                                         // MOVE MODEL LEFT
                 upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
@@ -514,7 +515,7 @@ int main(int argc, char*argv[])
                 racketPos = racketHandlePos + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
             upperArmRotationXAngle  += 5.0;
-            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPosOffset = vec3(5 * cos(radians(upperArmRotationXAngle )), 6.5f, -5 * sin(radians(upperArmRotationXAngle )));
             lowerArmPos = upperArmPos + lowerArmPosOffset;
             racketHandlePos = lowerArmPos + racketHandlePosOffset;
             racketPos = racketHandlePos + racketPosOffset;
@@ -528,7 +529,7 @@ int main(int argc, char*argv[])
                 racketPos = racketHandlePos + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE CLOCKWISE
             upperArmRotationXAngle  -= 5.0;
-            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPosOffset = vec3(5 * cos(radians(upperArmRotationXAngle )), 6.5f, -5 * sin(radians(upperArmRotationXAngle )));
             lowerArmPos = upperArmPos + lowerArmPosOffset;
             racketHandlePos = lowerArmPos + racketHandlePosOffset;
             racketPos = racketHandlePos + racketPosOffset;
@@ -576,9 +577,7 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {      // move camera down
             cameraPosition -= cameraUp * (currentCameraSpeed/2) * dt;
         }
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {       // || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS
-            shift = true;
-        }
+
         if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) // ZOOM OUT
         {
             upperArmRotationXAngle = 0;
@@ -635,24 +634,20 @@ int main(int argc, char*argv[])
 
         // --------------------- ZOOM IN AND ZOOM OUT ------------------------------
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-
-        }
-        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) { // ZOOM IN
-            fov += 0.25;
+            if(dx < 0) {                // ZOOM OUT
+                if (fov < 179.0) {
+                    fov += 1.0;
+                }
+            } else if(dx > 0) {         // ZOOM IN
+                if (fov > 1.0) {
+                    fov -= 1.0;
+                }
+            }
             projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
                                              800.0f / 600.0f,  // aspect ratio
                                              0.01f, 100.0f);   // near and far (near > 0)
     
-            GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
-            glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
-        }
-        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) { // ZOOM OUT
-            fov -= 0.25;
-            projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
-                                             800.0f / 600.0f,  // aspect ratio
-                                             0.01f, 100.0f);   // near and far (near > 0)
-    
-            GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
+            // GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
             glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
         }
 
@@ -660,7 +655,6 @@ int main(int argc, char*argv[])
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp );
         GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
         glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-
     }
     
     // Shutdown GLFW
