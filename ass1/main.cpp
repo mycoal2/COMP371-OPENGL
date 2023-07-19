@@ -138,7 +138,7 @@ int createVertexBufferObject()
                           3,                   // size
                           GL_FLOAT,            // type
                           GL_FALSE,            // normalized?
-                          2*sizeof(vec3), // stride - each vertex contain 2 vec3 (position, color)
+                          2*sizeof(vec3),       // stride - each vertex contain 2 vec3 (position, color)
                           (void*)0             // array buffer offset
                           );
     glEnableVertexAttribArray(0);
@@ -470,134 +470,19 @@ int main(int argc, char*argv[])
         lastMousePosY = mousePosY;
         
         // Convert to spherical coordinates
-        const float cameraAngularSpeed = 15.0f;
-        cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-        cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
+
         
-        // Clamp vertical angle to [-85, 85] degrees
-        cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
-        if (cameraHorizontalAngle > 360)
-        {
-            cameraHorizontalAngle -= 360;
-        }
-        else if (cameraHorizontalAngle < -360)
-        {
-            cameraHorizontalAngle += 360;
-        }
-        
-        float theta = radians(cameraHorizontalAngle);
-        float phi = radians(cameraVerticalAngle);
-        
-        cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
-        vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
-        
-        glm::normalize(cameraSideVector);
+        // glm::normalize(cameraSideVector);
 
         float currentCameraSpeed = 20;
 
+        // ------------------------------------------------------------------------------------
         // ------------------------------ Handle inputs ---------------------------------------
+        // ------------------------------------------------------------------------------------
+
         shift = false;
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
-
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) // move camera to the left
-        {
-            cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) // move camera to the right
-        {
-            cameraPosition += cameraSideVector * currentCameraSpeed * dt;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) // move camera 
-        {
-            cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) // move camera down
-        {
-            cameraPosition += cameraLookAt * currentCameraSpeed * dt;
-        }
-         if (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) // move camera 
-        {
-            cameraPosition += cameraUp * (currentCameraSpeed/2) * dt;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) // move camera down
-        {
-            cameraPosition -= cameraUp * (currentCameraSpeed/2) * dt;
-        }
-         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) // SCALE DOWN
-        {
-            shift = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // SCALE DOWN
-        {
-            if(shift) {
-                upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
-            } else {
-            upperArmRotationXAngle  += 1.0;
-            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPos = racketHandlePos + racketPosOffset;
-            }
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // SCALE DOWN
-        {
-            if(shift) {
-                upperArmPos += vec3(0.1f, 0.0f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
-            } else {
-            upperArmRotationXAngle  -= 1.0;
-            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPos = racketHandlePos + racketPosOffset;
-            }
-        }
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // SCALE DOWN
-        {
-            if(shift) {
-                upperArmPos += vec3(0.0f, 0.1f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
-            } else {
-
-            }
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // SCALE DOWN
-        {
-            if(shift) {
-                upperArmPos -= vec3(0.0f, 0.1f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
-            } else {
-
-            }
-        }
-
-        // ------------------------------ MODEL SCALE -------------------------------
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) // SCALE UP
-        {
-            modelScale += 0.01;
-
-        }
-        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) // SCALE DOWN
-        {
-            modelScale -= 0.01;
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) // REPOSITION MODEL
-        {
+        // ------------------------------ REPOSITION MODEL ------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
                 float randomX = randomInRange(-40.0f, 40.0f);
                 float randomY = randomInRange(5.0f, 15.0f);
@@ -610,10 +495,90 @@ int main(int argc, char*argv[])
                 keyPressed = true;
             }             
         }
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {   // check for release so it doesn't do it constantly
                 keyPressed = false;
         }
+        // ------------------------------ MODEL SCALE -----------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {      // SCALE UP
+            modelScale += 0.01;
+        }
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {     // SCALE DOWN
+            modelScale -= 0.01;
+        }
+        // ------------------------------ UPDATE MODEL POSITION --------------------------------
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
+            if(shift) {                                         // MOVE MODEL LEFT
+                upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
+                lowerArmPos = upperArmPos + lowerArmPosOffset;
+                racketHandlePos = lowerArmPos + racketHandlePosOffset;
+                racketPos = racketHandlePos + racketPosOffset;
+            } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
+            upperArmRotationXAngle  += 5.0;
+            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPos = upperArmPos + lowerArmPosOffset;
+            racketHandlePos = lowerArmPos + racketHandlePosOffset;
+            racketPos = racketHandlePos + racketPosOffset;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            if(shift) {                                         // MOVE MODEL RIGHT
+                upperArmPos += vec3(0.1f, 0.0f, 0.0f);
+                lowerArmPos = upperArmPos + lowerArmPosOffset;
+                racketHandlePos = lowerArmPos + racketHandlePosOffset;
+                racketPos = racketHandlePos + racketPosOffset;
+            } else {                                            // ROTATE 5 DEGREE CLOCKWISE
+            upperArmRotationXAngle  -= 5.0;
+            lowerArmPosOffset = vec3(6 * cos(radians(upperArmRotationXAngle )), 4.0f, -6 * sin(radians(upperArmRotationXAngle )));
+            lowerArmPos = upperArmPos + lowerArmPosOffset;
+            racketHandlePos = lowerArmPos + racketHandlePosOffset;
+            racketPos = racketHandlePos + racketPosOffset;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            if(shift) {                                         // MOVE MODEL UP
+                upperArmPos += vec3(0.0f, 0.1f, 0.0f);
+                lowerArmPos = upperArmPos + lowerArmPosOffset;
+                racketHandlePos = lowerArmPos + racketHandlePosOffset;
+                racketPos = racketHandlePos + racketPosOffset;
+            } else {
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            if(shift) {                                         // MOVE MODEL DOWN
+                upperArmPos -= vec3(0.0f, 0.1f, 0.0f);
+                lowerArmPos = upperArmPos + lowerArmPosOffset;
+                racketHandlePos = lowerArmPos + racketHandlePosOffset;
+                racketPos = racketHandlePos + racketPosOffset;
+            } else {
+            }
+        }
+        // ------------------------------ CHANGE WORLD ORIENTATION --------------------------------
 
+        
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);
+        }
+        // if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
+        //     cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
+        // }
+        // if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {     // move camera to the right
+        //     cameraPosition += cameraSideVector * currentCameraSpeed * dt;
+        // }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {      // move camera back
+            cameraPosition -= cameraLookAt * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {        // move camera forward
+            cameraPosition += cameraLookAt * currentCameraSpeed * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {       // move camera up
+            cameraPosition += cameraUp * (currentCameraSpeed/2) * dt;
+        }        
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {      // move camera down
+            cameraPosition -= cameraUp * (currentCameraSpeed/2) * dt;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {       // || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS
+            shift = true;
+        }
         if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) // ZOOM OUT
         {
             upperArmRotationXAngle = 0;
@@ -627,6 +592,8 @@ int main(int argc, char*argv[])
             racketPosOffset = vec3(0.0f, 8.0f, 0.0f);
             racketPos = racketHandlePos + racketPosOffset;
         }
+
+
         // ------------------- RENDERING MODE ---------------------------------------
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) { // RENDER TRIANGLES   
             renderingMode = GL_TRIANGLES;
@@ -638,7 +605,38 @@ int main(int argc, char*argv[])
             renderingMode = GL_POINTS;
         }
 
+
+
+        // --------------------- CAMERA PAN AND TILT  ------------------------------
+        const float cameraAngularSpeed = 15.0f;
+        float theta;
+        float phi;
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+            cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
+            if (cameraHorizontalAngle > 360)
+            {
+                cameraHorizontalAngle -= 360;
+            }
+            else if (cameraHorizontalAngle < -360)
+            {
+                cameraHorizontalAngle += 360;
+            }
+        }
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
+            cameraVerticalAngle   -= dy * cameraAngularSpeed * dt;
+            // Clamp vertical angle to [-85, 85] degrees
+            cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
+        }
+        theta = radians(cameraHorizontalAngle);
+        phi = radians(cameraVerticalAngle);
+        cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
+        vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
+
+
         // --------------------- ZOOM IN AND ZOOM OUT ------------------------------
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+
+        }
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) { // ZOOM IN
             fov += 0.25;
             projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
@@ -649,7 +647,6 @@ int main(int argc, char*argv[])
             glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
         }
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) { // ZOOM OUT
-        
             fov -= 0.25;
             projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
                                              800.0f / 600.0f,  // aspect ratio
