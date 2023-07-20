@@ -319,14 +319,15 @@ int main(int argc, char*argv[])
 
 
     
-    
+    // CHARACTER SIZE 3 X 4
     vec3 characterHorizontalSize = vec3(1.00f, 1.0f, 3.0f);
     vec3 characterVerticalSize = vec3(1.0f,4.0f, 1.0f);
+    // INITIAL POSITION
     vec3 characterHmovement = vec3(30.0f, 15.0f, 10.0f);
     vec3 characterOmovement = vec3(30.0f, 15.0f, -10.0f);
     vec3 characterNmovement = vec3(-30.0f, 15.0f, -10.0f);
     vec3 characterGmovement = vec3(-30.0f, 15.0f, 10.0f);
-
+    // RACKET BELOW CHARACTER
     vec3 characterRacketOffset = vec3(0.0f, 12.0f, 0.0f);
     vec3 racketHandlePosH = characterHmovement - characterRacketOffset;
     vec3 racketHandlePosO = characterOmovement - characterRacketOffset;
@@ -339,8 +340,17 @@ int main(int argc, char*argv[])
     vec3 racketPosN = racketHandlePosN + racketPosOffset;
     vec3 racketPosG = racketHandlePosG + racketPosOffset;
 
+   
+    // ROTATION ANGLES
+    float racketHRotationY = 0;
+    float racketORotationY = 0;
+    float racketNRotationY = 0;
+    float racketGRotationY = 0;
+     // POINTER TO CHARACTER YOU CONTROL
     vec3* currentCharControl = &characterHmovement;
+    float* currentRacketRotationY = &racketHRotationY;
     bool reversed = false;
+
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -581,14 +591,15 @@ int main(int argc, char*argv[])
 
 
 
-        // ------------------ CREATING RACKET -------------------------------------
+        // ------------------ CREATING RACKET -----------------------------------------
+
         // ------------------ RACKET CHARACTER H --------------------------------------
-        // ------------------ RACKET HANDLE --------------------------------------
+        // ------------------ RACKET HANDLE -------------------------------------------
         tempColor[0] = 0.4f;        // Value for Red
         tempColor[1] = 0.7f;        // Value for Green
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketHandlePosH) * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
+        mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketHandlePosH) * rotate(mat4(1.0f), radians(racketHRotationY), vec3(0.0f, 1.0, 0.0f)) * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -598,7 +609,7 @@ int main(int argc, char*argv[])
         tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH) * scale(mat4(1.0f), vec3(1.0f, 6.0f, 3.0f));
+        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH) * rotate(mat4(1.0f), radians(racketHRotationY), vec3(0.0f, 1.0, 0.0f)) * scale(mat4(1.0f), vec3(1.0f, 6.0f, 3.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -607,15 +618,15 @@ int main(int argc, char*argv[])
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 0.9f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        for (int i = -4; i < 5; i++) {
+        for (int i = -4; i < 5; i++) {          // VERTICAL GRID
             vec3 offset = vec3(0.0f, 0.0f, i * 0.25f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH + offset) * scale(mat4(1.0f), vec3(1.1f, 5.5f, 0.05f));
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH + offset) * translate(mat4(1.0f), -1.0f * offset) * rotate(mat4(1.0f), radians(racketHRotationY), vec3(0.0f, 1.0, 0.0f)) * translate(mat4(1.0f), offset) * scale(mat4(1.0f), vec3(1.1f, 5.5f, 0.05f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
-        for (int i = -5; i < 6; i++) {
+        for (int i = -5; i < 6; i++) {          // HORIZONTAL GRID
             vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH + offset) * scale(mat4(1.0f), vec3(1.1f, 0.1f, 2.5f));
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), racketPosH + offset) * rotate(mat4(1.0f), radians(racketHRotationY), vec3(0.0f, 1.0, 0.0f)) * scale(mat4(1.0f), vec3(1.1f, 0.1f, 2.5f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
@@ -783,18 +794,22 @@ int main(int argc, char*argv[])
         // ------------------------------ CHOOSE CHARACTER ------------------------------------
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
             currentCharControl = &characterHmovement;
+            currentRacketRotationY = &racketHRotationY;
             reversed = false;
         }
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             currentCharControl = &characterOmovement;
+            currentRacketRotationY = &racketORotationY;
             reversed = false;
         }
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
             currentCharControl = &characterNmovement;
+            currentRacketRotationY = &racketNRotationY;
             reversed = true;
         }
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
             currentCharControl = &characterGmovement;
+            currentRacketRotationY = &racketGRotationY;
             reversed = true;
         }
         // ------------------------------ REPOSITION MODEL ------------------------------------
@@ -824,12 +839,12 @@ int main(int argc, char*argv[])
             shift = true;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
-            if(shift) {                                         // MOVE MODEL LEFT
+            if(shift) {                                             // MOVE MODEL LEFT
                 if(reversed) {
                     *currentCharControl += vec3(0.0f, 0.0f, -0.1f);
                 } else {
                     *currentCharControl += vec3(0.0f, 0.0f, 0.1f);
-                }                  // racketHandlePosH += vec3(0.0f, 0.0f, 0.1f);
+                }                  
                 racketHandlePosH = characterHmovement - characterRacketOffset;
                 racketPosH = racketHandlePosH + racketPosOffset;
                 racketHandlePosO = characterOmovement - characterRacketOffset;
@@ -839,7 +854,7 @@ int main(int argc, char*argv[])
                 racketHandlePosG = characterGmovement - characterRacketOffset;
                 racketPosG = racketHandlePosG + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
-            upperArmRotationXAngle  += 5.0;
+            *currentRacketRotationY += 3.0;
             //lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
             // lowerArmPos = upperArmPos + lowerArmPosOffset;
             // racketHandlePos = lowerArmPos + racketHandlePosOffset;
@@ -862,9 +877,7 @@ int main(int argc, char*argv[])
                 racketHandlePosG = characterGmovement - characterRacketOffset;
                 racketPosG = racketHandlePosG + racketPosOffset;
             } else {                                            // ROTATE 5 DEGREE CLOCKWISE
-            upperArmRotationXAngle  -= 5.0;
-
-            racketPosH = racketHandlePosH + racketPosOffset;
+            *currentRacketRotationY  -= 3.0;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
