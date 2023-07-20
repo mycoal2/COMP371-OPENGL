@@ -340,7 +340,7 @@ int main(int argc, char*argv[])
     vec3 racketPosG = racketHandlePosG + racketPosOffset;
 
     vec3* currentCharControl = &characterHmovement;
-
+    bool reversed = false;
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -780,6 +780,23 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
+        // ------------------------------ CHOOSE CHARACTER ------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+            currentCharControl = &characterHmovement;
+            reversed = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+            currentCharControl = &characterOmovement;
+            reversed = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+            currentCharControl = &characterNmovement;
+            reversed = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            currentCharControl = &characterGmovement;
+            reversed = true;
+        }
         // ------------------------------ REPOSITION MODEL ------------------------------------
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
@@ -808,8 +825,11 @@ int main(int argc, char*argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
             if(shift) {                                         // MOVE MODEL LEFT
-                *currentCharControl += vec3(0.0f, 0.0f, 0.1f);
-                // racketHandlePosH += vec3(0.0f, 0.0f, 0.1f);
+                if(reversed) {
+                    *currentCharControl += vec3(0.0f, 0.0f, -0.1f);
+                } else {
+                    *currentCharControl += vec3(0.0f, 0.0f, 0.1f);
+                }                  // racketHandlePosH += vec3(0.0f, 0.0f, 0.1f);
                 racketHandlePosH = characterHmovement - characterRacketOffset;
                 racketPosH = racketHandlePosH + racketPosOffset;
                 racketHandlePosO = characterOmovement - characterRacketOffset;
@@ -827,8 +847,12 @@ int main(int argc, char*argv[])
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            if(shift) {                                         // MOVE MODEL RIGHT
-                *currentCharControl += vec3(0.0f, 0.0f, -0.1f);
+            if(shift) {    
+                if(reversed) {
+                    *currentCharControl += vec3(0.0f, 0.0f, 0.1f);
+                } else {
+                    *currentCharControl += vec3(0.0f, 0.0f, -0.1f);
+                }                                     // MOVE MODEL RIGHT
                 racketHandlePosH = characterHmovement - characterRacketOffset;
                 racketPosH = racketHandlePosH + racketPosOffset;
                 racketHandlePosO = characterOmovement - characterRacketOffset;
@@ -845,7 +869,11 @@ int main(int argc, char*argv[])
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL FORWARD
-                *currentCharControl += vec3(-0.1f, 0.0f, 0.0f);
+                if(reversed) {
+                    *currentCharControl += vec3(0.1f, 0.0f, 0.0f);
+                } else {
+                    *currentCharControl += vec3(-0.1f, 0.0f, 0.0f);
+                }
                 racketHandlePosH = characterHmovement - characterRacketOffset;
                 racketPosH = racketHandlePosH + racketPosOffset;
                 racketHandlePosO = characterOmovement - characterRacketOffset;
@@ -858,8 +886,12 @@ int main(int argc, char*argv[])
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            if(shift) {                                         // MOVE MODEL BACK
-                *currentCharControl += vec3(0.1f, 0.0f, 0.0f);
+            if(shift) {    
+                if(reversed) {
+                    *currentCharControl += vec3(-0.1f, 0.0f, 0.0f);
+                } else {
+                    *currentCharControl += vec3(0.1f, 0.0f, 0.0f);
+                }                                     // MOVE MODEL BACK
                 racketHandlePosH = characterHmovement - characterRacketOffset;
                 racketPosH = racketHandlePosH + racketPosOffset;
                 racketHandlePosO = characterOmovement - characterRacketOffset;
