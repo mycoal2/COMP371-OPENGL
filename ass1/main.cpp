@@ -256,7 +256,7 @@ int main(int argc, char*argv[])
     int renderingMode = GL_TRIANGLES;
 
     vec3 cameraPosition(0.0f, 15.0f, 40.0f);
-    vec3 cameraLookAt(0.0f, -5.0f, -1.0f);
+    vec3 cameraLookAt(0.0f,-5.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
     float cameraAngleX = 0.0f;
     float cameraAngleY = 0.0f;
@@ -336,14 +336,16 @@ int main(int argc, char*argv[])
         glUniform3fv(colorLocation, 1, tempColor);
         for(float x = -50; x < 50; x++) {
             // glUseProgram(shaderProgram2);
-            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
+            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
             GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
 
             // glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             
-            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
+            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) 
+            * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
 
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -367,27 +369,30 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
+        mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
+        * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // -------------------- Z AXIS -------------------------------------------
         tempColor[0] = 0.0f;        // Value for Red
-        tempColor[1] = 0.0f;        // Value for Green
-        tempColor[2] = 1.0f;        // Value for Blue
+        tempColor[1] = 1.0f;        // Value for Green
+        tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f))* scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
+        mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
+        * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // -------------------- Y AXIS -------------------------------------------
         tempColor[0] = 0.0f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 0.0f;        // Value for Blue
+        tempColor[1] = 0.0f;        // Value for Green
+        tempColor[2] = 1.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
+        mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
+        * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
@@ -399,7 +404,11 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.6f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-        mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
+        mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), upperArmPos) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) 
+        * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
  
@@ -409,7 +418,12 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.5f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
+        mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset)) 
+        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * translate(mat4(1.0f), lowerArmPosOffset) 
+        * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
          
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -420,7 +434,12 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-       mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
+       mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+       * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset)) 
+       * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+       * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+       * translate(mat4(1.0f), lowerArmPosOffset) 
+       * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -431,7 +450,12 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (racketHandlePos + racketPosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
+        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), (racketHandlePos + racketPosOffset)) 
+        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * translate(mat4(1.0f), lowerArmPosOffset) 
+        * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
         glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -442,13 +466,23 @@ int main(int argc, char*argv[])
         glUniform3fv(colorLocation, 1, tempColor);
         for (int i = -4; i < 5; i++) {
             vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + offset)) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset + offset) * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+            * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) 
+            * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + offset))
+            * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), lowerArmPosOffset + offset) 
+            * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
         for (int i = -7; i < 8; i++) {
             vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+            * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) 
+            * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+            * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), lowerArmPosOffset) 
+            * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
             glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
