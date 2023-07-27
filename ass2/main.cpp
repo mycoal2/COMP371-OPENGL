@@ -8,6 +8,7 @@
 // - https://learnopengl.com/Getting-started/Hello-Triangle
 
 #include <iostream>
+#include <vector>
 
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
@@ -21,7 +22,100 @@
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
 using namespace glm;
+using namespace std;
 
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+  int k1, k2;
+  for(int i = 0; i <= slices; i++) {
+    k1 = i * (stacks + 1);
+    k2 = k1 + stacks +1;
+    for(int j = 0; j <= stacks; j++, k1++, k2++) {
+      vec3 v;
+      float theta = 2.0f * M_PI * j / slices;
+      float phi = M_PI * i / stacks;
+      v.x = radius * cos(theta) * sin(phi);
+      v.y = radius * sin(theta) * sin(phi);
+      v.z = radius * cos(phi);
+      vertices.push_back(v);
+      vec3 n(v.x/radius, v.y/radius, v.z/radius);
+      normals.push_back(n);
+      vec2 m;
+      m.x = (float)j/(float)slices;
+      m.y = (float)i/(float)stacks;
+      UV.push_back(m);
+
+      // indices.push_back(i*(stacks+1)+j);
+      // indices.push_back((i+1)*(stacks+1)+j);
+      if(i != 0)
+        {
+            indices.push_back(k1);
+            indices.push_back(k2);
+            indices.push_back(k1 + 1);
+        }
+
+        // k1+1 => k2 => k2+1
+        if(i != (slices-1))
+        {
+            indices.push_back(k1 + 1);
+            indices.push_back(k2);
+            indices.push_back(k2 + 1);
+        }
+
+        // store indices for lines
+        // vertical lines for all stacks, k1 => k2
+        // lineIndices.push_back(k1);
+        // lineIndices.push_back(k2);
+        // if(i != 0)  // horizontal lines except 1st stack, k1 => k+1
+        // {
+            // lineIndices.push_back(k1);
+            // lineIndices.push_back(k1 + 1);
+        // }
+    }
+  }
+}
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices)
+{
+
+  GLuint VAO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO); //Becomes active VAO
+  // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+  //Vertex VBO setup
+  GLuint vertices_VBO;
+  glGenBuffers(1, &vertices_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+  glEnableVertexAttribArray(0);
+
+  //Normals VBO setup
+  GLuint normals_VBO;
+  glGenBuffers(1, &normals_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+  glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+  glEnableVertexAttribArray(1);
+
+  //UVs VBO setup
+  GLuint uvs_VBO;
+  glGenBuffers(1, &uvs_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+  glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+  glEnableVertexAttribArray(2);
+
+  //EBO setup
+  GLuint EBO;
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+  glBindVertexArray(0);
+  // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+  vertexCount = vertexIndices.size();
+  return VAO;
+}
 
 const char* getVertexShaderSource()
 {
@@ -256,7 +350,7 @@ int main(int argc, char*argv[])
     int renderingMode = GL_TRIANGLES;
 
     vec3 cameraPosition(0.0f, 15.0f, 40.0f);
-    vec3 cameraLookAt(0.0f,     -5.0f, -1.0f);
+    vec3 cameraLookAt(0.0f,-5.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
     float cameraAngleX = 0.0f;
     float cameraAngleY = 0.0f;
@@ -284,6 +378,23 @@ int main(int argc, char*argv[])
     glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
     
     int vao = createVertexBufferObject();
+    // ---------------------------------------------------------
+    // -------------------- SPHERE -----------------------------
+    // ---------------------------------------------------------
+    vector<int> vertexIndices;
+    //The contiguous sets of three indices of vertices, normals and UVs, used to make a triangle
+    vector<glm::vec3> vertices;
+    vector<glm::vec3> normals;
+    vector<glm::vec2> UVs;
+    createSPhere(vertices, normals, UVs, vertexIndices, 5.0f, 50, 50);
+    int sphereVertices;
+    GLuint sphereVAO = setupModelEBO(sphereVertices, vertices, normals, UVs, vertexIndices);
+
+    int activeVertices = sphereVertices;
+    GLuint activeVAO = sphereVAO;
+    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     float lastFrameTime = glfwGetTime();
     int lastMouseLeftState = GLFW_RELEASE;
@@ -295,7 +406,7 @@ int main(int argc, char*argv[])
     float modelScale = 1;
     float upperArmRotationXAngle = 0;
     float upperArmRotationYAngle = 0;
-    vec3 upperArmPos = vec3(45.0f, 6.0f, 0.0f);
+    vec3 upperArmPos = vec3(0.0f, 6.0f, 0.0f);
     vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
     vec3 lowerArmPos = upperArmPos + lowerArmPosOffset;
     vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
@@ -329,6 +440,7 @@ int main(int argc, char*argv[])
 
         
         //  ----------------------- Draw Grid 100x100 ------------------------
+        GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         // Change shader Color to Yellow
         tempColor[0] = 0.9f;        // Value for Red
         tempColor[1] = 0.9f;        // Value for Green
@@ -336,15 +448,16 @@ int main(int argc, char*argv[])
         glUniform3fv(colorLocation, 1, tempColor);
         for(float x = -50; x < 50; x++) {
             // glUseProgram(shaderProgram2);
-            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
-            GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-            glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
+            mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
 
             // glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             
-            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
-            glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
+            mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) 
+            * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
 
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
         }
@@ -358,37 +471,39 @@ int main(int argc, char*argv[])
         // THIS IS 1 UNIT 
         // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
         mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
-        GLuint gridMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
         // -------------------- X AXIS -------------------------------------------
         tempColor[0] = 1.0f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 1.0f;        // Value for Blue
+        tempColor[1] = 0.0f;        // Value for Green
+        tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
+        mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
+        * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // -------------------- Z AXIS -------------------------------------------
-        tempColor[0] = 1.0f;        // Value for Red
+        tempColor[0] = 0.0f;        // Value for Red
         tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 1.0f;        // Value for Blue
+        tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f))* scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
+        mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
+        * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
         // -------------------- Y AXIS -------------------------------------------
-        tempColor[0] = 1.0f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
+        tempColor[0] = 0.0f;        // Value for Red
+        tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 1.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         
-        mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
+        mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
+        * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
 
@@ -399,8 +514,12 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.6f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-        mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), upperArmPos) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
+        mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), upperArmPos) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) 
+        * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
  
         // ------------------ LOWER ARM ------------------------------------------
@@ -409,8 +528,13 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.5f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
+        mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset)) 
+        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * translate(mat4(1.0f), lowerArmPosOffset) 
+        * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
          
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
@@ -420,8 +544,13 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-       mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
+       mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+       * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset)) 
+       * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+       * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+       * translate(mat4(1.0f), lowerArmPosOffset) 
+       * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
 
@@ -431,8 +560,13 @@ int main(int argc, char*argv[])
         tempColor[2] = 0.4f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
         // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (racketHandlePos + racketPosOffset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
-        glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
+        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+        * translate(mat4(1.0f), (racketHandlePos + racketPosOffset)) 
+        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+        * translate(mat4(1.0f), lowerArmPosOffset) 
+        * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
         // ------------------ RACKET NET --------------------------------------
@@ -448,16 +582,30 @@ int main(int argc, char*argv[])
             * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
             * translate(mat4(1.0f), lowerArmPosOffset + offset) 
             * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
-            glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
         for (int i = -7; i < 8; i++) {
             vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) * translate(mat4(1.0f), lowerArmPosOffset) * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
-            glUniformMatrix4fv(gridMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
+            * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) 
+            * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
+            * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
+            * translate(mat4(1.0f), lowerArmPosOffset) 
+            * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
-
+        // ------------------------------ TENNIS BALL --------------------------------------
+        mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f)) 
+        * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);        
+        glBindVertexArray(0);
+        glBindVertexArray(activeVAO);
+	    // Draw geometry
+	    glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
+	    // Unbind geometry
+	    glBindVertexArray(0);
 
         
          // End Frame
