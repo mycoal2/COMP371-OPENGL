@@ -35,6 +35,8 @@ GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::v
 
 
 GLuint loadTexture(const char* filename);
+const char* getTexturedVertexShaderSource();
+const char* getTexturedFragmentShaderSource();
 
 const char* getVertexShaderSource() {
     // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
@@ -102,57 +104,69 @@ const char* getShadowFragmentShaderSource() {
         "}";
 }
 
-int createVertexBufferObject()
+struct TexturedColoredVertex
 {
+    TexturedColoredVertex(vec3 _position, vec3 _color, vec2 _uv)
+        : position(_position), color(_color), uv(_uv) {}
+
+    vec3 position;
+    vec3 color;
+    vec2 uv;
+};
+
+int compileAndLinkShaders();
+int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource);
+
+int createVertexBufferObject() {
     // Cube model
-    vec3 vertexArray[] = {  // position,                            color
-        vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), //left - red
-        vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f),
-        vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f),
-        
-        vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f),
-        vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f),
-        vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f),
-        
-        vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), // far - blue
-        vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f),
-        vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f),
-        
-        vec3( 0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f),
-        vec3( 0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f),
-        vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f),
-        
-        vec3( 0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), // bottom - turquoise
-        vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f),
-        vec3( 0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f),
-        
-        vec3( 0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f),
-        vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f),
-        vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f),
-        
-        vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), // near - green
-        vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f),
-        vec3( 0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f),
-        
-        vec3( 0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f),
-        vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f),
-        vec3( 0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f),
-        
-        vec3( 0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), // right - purple
-        vec3( 0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f),
-        vec3( 0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f),
-        
-        vec3( 0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f),
-        vec3( 0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f),
-        vec3( 0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f),
-        
-        vec3( 0.5f, 0.5f, 0.5f), vec3(0.5f, 0.5f, 0.5f), // top - yellow
-        vec3( 0.5f, 0.5f,-0.5f), vec3(0.5f, 0.5f, 0.5f),
-        vec3(-0.5f, 0.5f,-0.5f), vec3(0.5f, 0.5f, 0.5f),
-        
-        vec3( 0.5f, 0.5f, 0.5f), vec3(0.5f, 0.5f, 0.5f),
-        vec3(-0.5f, 0.5f,-0.5f), vec3(0.5f, 0.5f, 0.5f),
-        vec3(-0.5f, 0.5f, 0.5f), vec3(0.5f, 0.5f, 0.5f)
+    const TexturedColoredVertex VertexArray[] = {  // position,                            color
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)), // far - blue
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f))
     };
         
     // Create a vertex array
@@ -167,94 +181,46 @@ int createVertexBufferObject()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), vertexArray, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
-                          3,                   // size
-                          GL_FLOAT,            // type
-                          GL_FALSE,            // normalized?
-                          2*sizeof(vec3),       // stride - each vertex contain 2 vec3 (position, color)
-                          (void*)0             // array buffer offset
-                          );
+        3,                   // size
+        GL_FLOAT,            // type
+        GL_FALSE,            // normalized?
+        sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
+        (void*)0             // array buffer offset
+    );
     glEnableVertexAttribArray(0);
 
+
     glVertexAttribPointer(1,                            // attribute 1 matches aColor in Vertex Shader
-                          3,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          2*sizeof(vec3),
-                          (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
-                          );
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
+    );
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)(2 * sizeof(vec3))      // uv is offseted by 2 vec3 (comes after position and color)
+    );
+    glEnableVertexAttribArray(2);
 
     
     return vertexBufferObject;
 }
 
-
-int compileAndLinkShaders() {
-    // Create the shaders
-    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
-
-    const char* tempVertexShader;
-    const char* tempFragmentShader;
-    tempVertexShader = getVertexShaderSource();
-    tempFragmentShader = getFragmentShaderSource();
-
-    // Compile Vertex Shader
-    cout << "Compiling shader : Vertex Shader" << endl;
-    char const* VertexSourcePointer = tempVertexShader;
-    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-    glCompileShader(VertexShaderID);
-
-    // Check Vertex Shader
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-        printf("%s\n", &VertexShaderErrorMessage[0]);
-    }
-
-    // Compile Fragment Shader
-    cout << "Compiling shader : Fragment Shader"  << endl;
-    char const* FragmentSourcePointer = tempFragmentShader;
-    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-    glCompileShader(FragmentShaderID);
-
-    // Check Fragment Shader
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-        printf("%s\n", &FragmentShaderErrorMessage[0]);
-    }
-
-    // Link the program
-    printf("Linking program\n");
-    GLuint ProgramID = glCreateProgram();
-    glAttachShader(ProgramID, VertexShaderID);
-    glAttachShader(ProgramID, FragmentShaderID);
-    glLinkProgram(ProgramID);
-
-    // Check the program
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        printf("%s\n", &ProgramErrorMessage[0]);
-    }
-
-    glDetachShader(ProgramID, VertexShaderID);
-    glDetachShader(ProgramID, FragmentShaderID);
-
-    glDeleteShader(VertexShaderID);
-    glDeleteShader(FragmentShaderID);
-
-    return ProgramID;
+void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+}
+void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
 }
 
 float randomInRange(float lowerBound, float upperBound) {
@@ -285,11 +251,14 @@ void update() {
     racketNetPos = racketHandlePos + racketPosOffset;
 }
 
+bool keyPressed = false;
+bool shift = false;
+int renderingMode = GL_TRIANGLES;
+
 int main(int argc, char*argv[])
 {
     // Initialize GLFW and OpenGL version
     glfwInit();
-    
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -305,7 +274,6 @@ int main(int argc, char*argv[])
         return -1;
     }
     glfwMakeContextCurrent(window);
-
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
@@ -317,13 +285,17 @@ int main(int argc, char*argv[])
     // green background
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
+    // Load Textures
+    GLuint brickTextureID = loadTexture("assets/textures/brick.jpg");
+    GLuint cementTextureID = loadTexture("assets/textures/cement.jpg");
+    GLuint grassTextureID = loadTexture("assets/textures/grass.jpg");
+
     // Compile and link shaders here ...
     int shaderProgram = compileAndLinkShaders();
     glUseProgram(shaderProgram);
 
-    bool keyPressed = false;
-    bool shift = false;
-    int renderingMode = GL_TRIANGLES;
+    int texturedShaderProgram = compileAndLinkShaders(getTexturedVertexShaderSource(), getTexturedFragmentShaderSource());
+
 
     vec3 cameraPosition(0.0f, 15.0f, 40.0f);
     vec3 cameraLookAt(0.0f,-5.0f, -1.0f);
@@ -331,8 +303,6 @@ int main(int argc, char*argv[])
     float cameraAngleX = 0.0f;
     float cameraAngleY = 0.0f;
     float cameraAngleZ = 0.0f;
-
-    float cameraSpeed = 1.0f;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
 
@@ -353,7 +323,14 @@ int main(int argc, char*argv[])
     GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
     glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
     
+    setViewMatrix(shaderProgram, viewMatrix);
+    setViewMatrix(texturedShaderProgram, viewMatrix);
+
+    setProjectionMatrix(shaderProgram, projectionMatrix);
+    setProjectionMatrix(texturedShaderProgram, projectionMatrix);
+
     int vao = createVertexBufferObject();
+
     // ---------------------------------------------------------
     // -------------------- SPHERE -----------------------------
     // ---------------------------------------------------------
@@ -389,6 +366,7 @@ int main(int argc, char*argv[])
 
         // Each frame, reset color of each pixel to glClearColor
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glActiveTexture(GL_TEXTURE0);
 
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint colorLocation = glGetUniformLocation(shaderProgram, "customColor");
@@ -469,115 +447,115 @@ int main(int argc, char*argv[])
 
         // --------------------------------------------------------------------------------------
         // ------------------ CREATING MODEL ----------------------------------------------------
-        // ------------------ UPPER ARM ---------------------------------------------------------
-        tempColor[0] = 0.8f;        // Value for Red
-        tempColor[1] = 0.7f;        // Value for Green
-        tempColor[2] = 0.6f;        // Value for Blue
-        glUniform3fv(colorLocation, 1, tempColor);
-        // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
-        mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-        * translate(mat4(1.0f), upperArmPos) 
-        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-        * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f)) 
-        * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
-        glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+        // --------------------------------------------------------------------------------------
+        {
+            // ------------------ UPPER ARM ---------------------------------------------------------
+            tempColor[0] = 0.8f;        // Value for Red
+            tempColor[1] = 0.7f;        // Value for Green
+            tempColor[2] = 0.6f;        // Value for Blue
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
+            mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                * translate(mat4(1.0f), upperArmPos)
+                * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f))
+                * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
+            glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-        // --------------------------------------------------------------------------------------
-        // ------------------ LOWER ARM ---------------------------------------------------------
-        // --------------------------------------------------------------------------------------
-        tempColor[0] = 0.7f;        // Value for Red
-        tempColor[1] = 0.6f;        // Value for Green
-        tempColor[2] = 0.5f;        // Value for Blue
-        glUniform3fv(colorLocation, 1, tempColor);
-        // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-        * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset)) 
-        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
-        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-        * translate(mat4(1.0f), lowerArmPosOffset) 
-        * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
-         
-        glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+            // ------------------ LOWER ARM ---------------------------------------------------------
+            tempColor[0] = 0.7f;        // Value for Red
+            tempColor[1] = 0.6f;        // Value for Green
+            tempColor[2] = 0.5f;        // Value for Blue
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
+            mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
+                * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+                * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                * translate(mat4(1.0f), lowerArmPosOffset)
+                * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
 
-        // --------------------------------------------------------------------------------------
-        // ------------------ RACKET HANDLE  ----------------------------------------------------
-        // --------------------------------------------------------------------------------------
-        tempColor[0] = 0.4f;        // Value for Red
-        tempColor[1] = 0.7f;        // Value for Green
-        tempColor[2] = 0.4f;        // Value for Blue
-        glUniform3fv(colorLocation, 1, tempColor);
-        // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-       mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-       * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset)) 
-       * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
-       * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-       * translate(mat4(1.0f), lowerArmPosOffset) 
-       * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
-        glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+            glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-        // --------------------------------------------------------------------------------------
-        // ------------------ RACKET SURFACE ----------------------------------------------------
-        // --------------------------------------------------------------------------------------
-        tempColor[0] = 0.6f;        // Value for Red
-        tempColor[1] = 0.0f;        // Value for Green
-        tempColor[2] = 0.4f;        // Value for Blue
-        glUniform3fv(colorLocation, 1, tempColor);
-        // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
-        mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-        * translate(mat4(1.0f), (racketHandlePos + racketPosOffset)) 
-        * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
-        * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-        * translate(mat4(1.0f), lowerArmPosOffset) 
-        * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-        glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+            // ------------------ RACKET HANDLE  ----------------------------------------------------
+            tempColor[0] = 0.4f;        // Value for Red
+            tempColor[1] = 0.7f;        // Value for Green
+            tempColor[2] = 0.4f;        // Value for Blue
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
+            mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset))
+                * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+                * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                * translate(mat4(1.0f), lowerArmPosOffset)
+                * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
+            glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-        // --------------------------------------------------------------------------------------
-        // ------------------ RACKET NET --------------------------------------------------------
-        // --------------------------------------------------------------------------------------
-        tempColor[0] = 0.3f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 0.3f;        // Value for Blue
-        glUniform3fv(colorLocation, 1, tempColor);
-        for (int i = -4; i < 5; i++) {
-            vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-            * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) 
-            * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + offset))
-            * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-            * translate(mat4(1.0f), lowerArmPosOffset + offset) 
-            * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
+            // ------------------ RACKET SURFACE ----------------------------------------------------
+            tempColor[0] = 0.6f;        // Value for Red
+            tempColor[1] = 0.0f;        // Value for Green
+            tempColor[2] = 0.4f;        // Value for Blue
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
+            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
+                * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+                * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                * translate(mat4(1.0f), lowerArmPosOffset)
+                * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-        }
-        for (int i = -7; i < 8; i++) {
-            vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
-            mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale)) 
-            * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset)) 
-            * translate(mat4(1.0f), -1.0f * lowerArmPosOffset) 
-            * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f)) 
-            * translate(mat4(1.0f), lowerArmPosOffset) 
-            * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-            glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-        }
 
+            // ------------------ RACKET NET --------------------------------------------------------
+            tempColor[0] = 0.3f;        // Value for Red
+            tempColor[1] = 1.0f;        // Value for Green
+            tempColor[2] = 0.3f;        // Value for Blue
+            glUniform3fv(colorLocation, 1, tempColor);
+            for (int i = -4; i < 5; i++) {
+                vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
+                mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                    * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset))
+                    * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + offset))
+                    * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                    * translate(mat4(1.0f), lowerArmPosOffset + offset)
+                    * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
+                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+            }
+            for (int i = -7; i < 8; i++) {
+                vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
+                mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
+                    * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset))
+                    * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+                    * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                    * translate(mat4(1.0f), lowerArmPosOffset)
+                    * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
+                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+            }
+        }
         // --------------------------------------------------------------------------------------
-        // ------------------------------ TENNIS BALL -------------------------------------------
+        // ------------------- TENNIS BALL ------------------------------------------------------
         // --------------------------------------------------------------------------------------
-        mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f)) 
-        * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-        glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);        
-        glBindVertexArray(0);
-        glBindVertexArray(activeVAO);
-	    // Draw geometry
-	    glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
-	    // Unbind geometry
-	    glBindVertexArray(0);
+        {
+            glUseProgram(textureShaderProgram);
+            GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
+            glBindTexture(GL_TEXTURE_2D, brickTextureID);
+            glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
+            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f))
+                * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
+            glBindVertexArray(0);
+            glBindVertexArray(activeVAO);
+            // Draw geometry
+            glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
+            // Unbind geometry
+            glBindVertexArray(0);
+        }
         
          // End Frame
         glfwSwapBuffers(window);
@@ -873,4 +851,164 @@ GLuint loadTexture(const char* filename) {
     stbi_image_free(data);
     glBindTexture(GL_TEXTURE_2D, 0);
     return textureId;
+}
+
+const char* getTexturedVertexShaderSource() {
+    // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
+    return
+        "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;"
+        "layout (location = 1) in vec3 aColor;"
+        "layout (location = 2) in vec2 aUV;"
+        ""
+        "uniform mat4 worldMatrix;"
+        "uniform mat4 viewMatrix = mat4(1.0);"  // default value for view matrix (identity)
+        "uniform mat4 projectionMatrix = mat4(1.0);"
+        ""
+        "out vec3 vertexColor;"
+        "out vec2 vertexUV;"
+        ""
+        "void main()"
+        "{"
+        "   vertexColor = aColor;"
+        "   mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;"
+        "   gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);"
+        "   vertexUV = aUV;"
+        "}";
+}
+
+const char* getTexturedFragmentShaderSource() {
+    return
+        "#version 330 core\n"
+        "in vec3 vertexColor;"
+        "in vec2 vertexUV;"
+        "uniform sampler2D textureSampler;"
+        ""
+        "out vec4 FragColor;"
+        "void main()"
+        "{"
+        "   vec4 textureColor = texture( textureSampler, vertexUV );"
+        "   FragColor = textureColor * vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
+        "}";
+}
+
+int compileAndLinkShaders() {
+    // Create the shaders
+    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+    GLint Result = GL_FALSE;
+    int InfoLogLength;
+
+    const char* tempVertexShader;
+    const char* tempFragmentShader;
+    tempVertexShader = getVertexShaderSource();
+    tempFragmentShader = getFragmentShaderSource();
+
+    // Compile Vertex Shader
+    cout << "Compiling shader : Vertex Shader" << endl;
+    char const* VertexSourcePointer = tempVertexShader;
+    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+    glCompileShader(VertexShaderID);
+
+    // Check Vertex Shader
+    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+        printf("%s\n", &VertexShaderErrorMessage[0]);
+    }
+
+    // Compile Fragment Shader
+    cout << "Compiling shader : Fragment Shader" << endl;
+    char const* FragmentSourcePointer = tempFragmentShader;
+    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+    glCompileShader(FragmentShaderID);
+
+    // Check Fragment Shader
+    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+        printf("%s\n", &FragmentShaderErrorMessage[0]);
+    }
+
+    // Link the program
+    printf("Linking program\n");
+    GLuint ProgramID = glCreateProgram();
+    glAttachShader(ProgramID, VertexShaderID);
+    glAttachShader(ProgramID, FragmentShaderID);
+    glLinkProgram(ProgramID);
+
+    // Check the program
+    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+        printf("%s\n", &ProgramErrorMessage[0]);
+    }
+
+    glDetachShader(ProgramID, VertexShaderID);
+    glDetachShader(ProgramID, FragmentShaderID);
+
+    glDeleteShader(VertexShaderID);
+    glDeleteShader(FragmentShaderID);
+
+    return ProgramID;
+}
+
+int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource)
+{
+    // compile and link shader program
+    // return shader program id
+    // ------------------------------------
+
+    // vertex shader
+    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // check for shader compile errors
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // fragment shader
+    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // check for shader compile errors
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // link shaders
+    int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // check for linking errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
 }
