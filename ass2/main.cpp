@@ -23,7 +23,7 @@
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "include/stb_image.h"
 
 using namespace glm;
 using namespace std;
