@@ -7,6 +7,7 @@
 // - https://learnopengl.com/Getting-started/Hello-Window
 // - https://learnopengl.com/Getting-started/Hello-Triangle
 
+#define M_PI   3.14159265358979323846264338327950288
 #include <iostream>
 #include <vector>
 
@@ -21,104 +22,21 @@
 
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using namespace glm;
 using namespace std;
 
-void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
-  int k1, k2;
-  for(int i = 0; i <= slices; i++) {
-    k1 = i * (stacks + 1);
-    k2 = k1 + stacks +1;
-    for(int j = 0; j <= stacks; j++, k1++, k2++) {
-      vec3 v;
-      float theta = 2.0f * M_PI * j / slices;
-      float phi = M_PI * i / stacks;
-      v.x = radius * cos(theta) * sin(phi);
-      v.y = radius * sin(theta) * sin(phi);
-      v.z = radius * cos(phi);
-      vertices.push_back(v);
-      vec3 n(v.x/radius, v.y/radius, v.z/radius);
-      normals.push_back(n);
-      vec2 m;
-      m.x = (float)j/(float)slices;
-      m.y = (float)i/(float)stacks;
-      UV.push_back(m);
+// OpenGL Sphere by Song Ho - http://www.songho.ca/opengl/gl_sphere.html
 
-      // indices.push_back(i*(stacks+1)+j);
-      // indices.push_back((i+1)*(stacks+1)+j);
-      if(i != 0)
-        {
-            indices.push_back(k1);
-            indices.push_back(k2);
-            indices.push_back(k1 + 1);
-        }
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks);
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices);
 
-        // k1+1 => k2 => k2+1
-        if(i != (slices-1))
-        {
-            indices.push_back(k1 + 1);
-            indices.push_back(k2);
-            indices.push_back(k2 + 1);
-        }
 
-        // store indices for lines
-        // vertical lines for all stacks, k1 => k2
-        // lineIndices.push_back(k1);
-        // lineIndices.push_back(k2);
-        // if(i != 0)  // horizontal lines except 1st stack, k1 => k+1
-        // {
-            // lineIndices.push_back(k1);
-            // lineIndices.push_back(k1 + 1);
-        // }
-    }
-  }
-}
-GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices)
-{
+GLuint loadTexture(const char* filename);
 
-  GLuint VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO); //Becomes active VAO
-  // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-
-  //Vertex VBO setup
-  GLuint vertices_VBO;
-  glGenBuffers(1, &vertices_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-  glEnableVertexAttribArray(0);
-
-  //Normals VBO setup
-  GLuint normals_VBO;
-  glGenBuffers(1, &normals_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
-  glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-  glEnableVertexAttribArray(1);
-
-  //UVs VBO setup
-  GLuint uvs_VBO;
-  glGenBuffers(1, &uvs_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
-  glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
-  glEnableVertexAttribArray(2);
-
-  //EBO setup
-  GLuint EBO;
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
-
-  glBindVertexArray(0);
-  // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
-  vertexCount = vertexIndices.size();
-  return VAO;
-}
-
-const char* getVertexShaderSource()
-{
+const char* getVertexShaderSource() {
     // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
     return
                 "#version 330 core\n"
@@ -140,8 +58,7 @@ const char* getVertexShaderSource()
 }
 
 
-const char* getFragmentShaderSource()
-{
+const char* getFragmentShaderSource() {
     return
                 "#version 330 core\n"
                 "in vec3 vertexColor;"
@@ -150,6 +67,39 @@ const char* getFragmentShaderSource()
                 "{"
                 "   FragColor = vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
                 "}";
+}
+
+const char* getShadowVertexShaderSource() {
+    return
+        "#version 330 core"
+        ""
+        "layout(location = 0) in vec3 position;"
+        "uniform mat4 transform_in_light_space;"
+        ""
+        "void main()"
+        "{"
+        "   mat4 scale_bias_matrix = mat4(vec4(0.5, 0.0, 0.0, 0.0),"
+        "                               vec4(0.0, 0.5, 0.0, 0.0),"
+        "                               vec4(0.0, 0.0, 0.5, 0.0),"
+        "                               vec4(0.5, 0.5, 0.5, 1.0));"
+        "   gl_Position ="
+        "                   scale_bias_matrix * // bias the depth map coordinates"
+        "                   transform_in_light_space * vec4(position, 1.0);"
+        "}";
+}
+
+const char* getShadowFragmentShaderSource() {
+    return
+        "#version 330 core"
+        ""
+        "out vec4 FragColor;"
+        "in vec4 gl_FragCoord;"
+        ""
+        "void main()"
+        "{"
+        "   gl_FragDepth = gl_FragCoord.z;"
+        "   FragColor = vec4(vec3(gl_FragCoord.z), 1.0f);"
+        "}";
 }
 
 int createVertexBufferObject()
@@ -209,7 +159,6 @@ int createVertexBufferObject()
     GLuint vertexArrayObject;
     glGenVertexArrays(1, &vertexArrayObject);
     glBindVertexArray(vertexArrayObject);
-    
      
     // Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
     GLuint vertexBufferObject;
@@ -226,7 +175,6 @@ int createVertexBufferObject()
                           );
     glEnableVertexAttribArray(0);
 
-
     glVertexAttribPointer(1,                            // attribute 1 matches aColor in Vertex Shader
                           3,
                           GL_FLOAT,
@@ -241,64 +189,72 @@ int createVertexBufferObject()
 }
 
 
-int compileAndLinkShaders()
-{
-    // compile and link shader program
-    // return shader program id
-    // ------------------------------------
+int compileAndLinkShaders() {
+    // Create the shaders
+    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
-    // vertex shader
-    const char* tempShaderSource;
+    GLint Result = GL_FALSE;
+    int InfoLogLength;
+
+    const char* tempVertexShader;
     const char* tempFragmentShader;
-    tempShaderSource = getVertexShaderSource();
+    tempVertexShader = getVertexShaderSource();
     tempFragmentShader = getFragmentShaderSource();
 
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    const char* vertexShaderSource = tempShaderSource;
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    // Compile Vertex Shader
+    cout << "Compiling shader : Vertex Shader" << endl;
+    char const* VertexSourcePointer = tempVertexShader;
+    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+    glCompileShader(VertexShaderID);
+
+    // Check Vertex Shader
+    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
+    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
+        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+        printf("%s\n", &VertexShaderErrorMessage[0]);
     }
-    
-    // fragment shader
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    const char* fragmentShaderSource = tempFragmentShader;
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+
+    // Compile Fragment Shader
+    cout << "Compiling shader : Fragment Shader"  << endl;
+    char const* FragmentSourcePointer = tempFragmentShader;
+    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+    glCompileShader(FragmentShaderID);
+
+    // Check Fragment Shader
+    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
+    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
+        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+        printf("%s\n", &FragmentShaderErrorMessage[0]);
     }
-    
-    // link shaders
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+
+    // Link the program
+    printf("Linking program\n");
+    GLuint ProgramID = glCreateProgram();
+    glAttachShader(ProgramID, VertexShaderID);
+    glAttachShader(ProgramID, FragmentShaderID);
+    glLinkProgram(ProgramID);
+
+    // Check the program
+    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
+    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    if (InfoLogLength > 0) {
+        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+        printf("%s\n", &ProgramErrorMessage[0]);
     }
-    
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    
-    return shaderProgram;
+
+    glDetachShader(ProgramID, VertexShaderID);
+    glDetachShader(ProgramID, FragmentShaderID);
+
+    glDeleteShader(VertexShaderID);
+    glDeleteShader(FragmentShaderID);
+
+    return ProgramID;
 }
 
 float randomInRange(float lowerBound, float upperBound) {
@@ -308,6 +264,26 @@ float randomInRange(float lowerBound, float upperBound) {
     return dist(gen);
 }
 
+float modelScale = 1;
+float upperArmRotationXAngle = 0;
+float upperArmRotationYAngle = 0;
+
+vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
+vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
+vec3 racketPosOffset = vec3(0.0f, 8.0f, 0.0f);
+
+vec3 upperArmPos = vec3(0.0f, 6.0f, 0.0f);
+vec3 lowerArmPos = upperArmPos + lowerArmPosOffset;
+vec3 racketHandlePos = lowerArmPos + racketHandlePosOffset;
+vec3 racketPos = racketHandlePos + racketPosOffset;
+vec3 racketNetPos = racketHandlePos + racketPosOffset;
+
+void update() {
+    lowerArmPos = upperArmPos + lowerArmPosOffset;
+    racketHandlePos = lowerArmPos + racketHandlePosOffset;
+    racketPos = racketHandlePos + racketPosOffset;
+    racketNetPos = racketHandlePos + racketPosOffset;
+}
 
 int main(int argc, char*argv[])
 {
@@ -403,18 +379,6 @@ int main(int argc, char*argv[])
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
-    float modelScale = 1;
-    float upperArmRotationXAngle = 0;
-    float upperArmRotationYAngle = 0;
-    vec3 upperArmPos = vec3(0.0f, 6.0f, 0.0f);
-    vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-    vec3 lowerArmPos = upperArmPos + lowerArmPosOffset;
-    vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
-    vec3 racketHandlePos = lowerArmPos + racketHandlePosOffset;
-    vec3 racketPosOffset = vec3(0.0f, 8.0f, 0.0f);
-    vec3 racketPos = racketHandlePos + racketPosOffset;
-    vec3 racketNetPos = racketHandlePos + racketPosOffset;
-
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -432,14 +396,10 @@ int main(int argc, char*argv[])
 
         // Draw Geometry
         glBindVertexArray(vao);
-        // Draw ground
-        // mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -2.51f, 0.0f)) * scale(mat4(1.0f), vec3(100.0f, 1.0f, 100.0f));
-        // GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-        // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
-        // glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-        
-        //  ----------------------- Draw Grid 100x100 ------------------------
+        // --------------------------------------------------------------------------------------
+        //  ----------------------- Draw Grid 100x100 -------------------------------------------
+        // --------------------------------------------------------------------------------------
         GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         // Change shader Color to Yellow
         tempColor[0] = 0.9f;        // Value for Red
@@ -462,8 +422,9 @@ int main(int argc, char*argv[])
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
         }
 
-
-        // -------------------- COORDINATE AXIS ----------------------------------
+        // --------------------------------------------------------------------------------------
+        // -------------------- COORDINATE AXIS -------------------------------------------------
+        // --------------------------------------------------------------------------------------
         tempColor[0] = 1.0f;        // Value for Red
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 1.0f;        // Value for Blue
@@ -484,7 +445,7 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-        // -------------------- Z AXIS -------------------------------------------
+        // -------------------- Z AXIS ----------------------------------------------------------
         tempColor[0] = 0.0f;        // Value for Red
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 0.0f;        // Value for Blue
@@ -495,7 +456,7 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-        // -------------------- Y AXIS -------------------------------------------
+        // -------------------- Y AXIS ----------------------------------------------------------
         tempColor[0] = 0.0f;        // Value for Red
         tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 1.0f;        // Value for Blue
@@ -506,9 +467,9 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
 
-
-        // ------------------ CREATING MODEL -------------------------------------
-        // ------------------ UPPER ARM ------------------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------ CREATING MODEL ----------------------------------------------------
+        // ------------------ UPPER ARM ---------------------------------------------------------
         tempColor[0] = 0.8f;        // Value for Red
         tempColor[1] = 0.7f;        // Value for Green
         tempColor[2] = 0.6f;        // Value for Blue
@@ -521,8 +482,10 @@ int main(int argc, char*argv[])
         * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
- 
-        // ------------------ LOWER ARM ------------------------------------------
+
+        // --------------------------------------------------------------------------------------
+        // ------------------ LOWER ARM ---------------------------------------------------------
+        // --------------------------------------------------------------------------------------
         tempColor[0] = 0.7f;        // Value for Red
         tempColor[1] = 0.6f;        // Value for Green
         tempColor[2] = 0.5f;        // Value for Blue
@@ -538,7 +501,9 @@ int main(int argc, char*argv[])
          
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-        // ------------------ RACKET HANDLE  --------------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------ RACKET HANDLE  ----------------------------------------------------
+        // --------------------------------------------------------------------------------------
         tempColor[0] = 0.4f;        // Value for Red
         tempColor[1] = 0.7f;        // Value for Green
         tempColor[2] = 0.4f;        // Value for Blue
@@ -553,8 +518,9 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-
-        // ------------------ RACKET SURFACE --------------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------ RACKET SURFACE ----------------------------------------------------
+        // --------------------------------------------------------------------------------------
         tempColor[0] = 0.6f;        // Value for Red
         tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 0.4f;        // Value for Blue
@@ -569,7 +535,9 @@ int main(int argc, char*argv[])
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
         glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
-        // ------------------ RACKET NET --------------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------ RACKET NET --------------------------------------------------------
+        // --------------------------------------------------------------------------------------
         tempColor[0] = 0.3f;        // Value for Red
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 0.3f;        // Value for Blue
@@ -596,7 +564,10 @@ int main(int argc, char*argv[])
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
         }
-        // ------------------------------ TENNIS BALL --------------------------------------
+
+        // --------------------------------------------------------------------------------------
+        // ------------------------------ TENNIS BALL -------------------------------------------
+        // --------------------------------------------------------------------------------------
         mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f)) 
         * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);        
@@ -626,7 +597,10 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
-        // ------------------------------ REPOSITION MODEL ------------------------------------
+
+        // --------------------------------------------------------------------------------------
+        // ------------------------------ REPOSITION MODEL --------------------------------------
+        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
                 float randomX = randomInRange(-25.0f, 25.0f);
@@ -634,24 +608,27 @@ int main(int argc, char*argv[])
                 float randomZ = randomInRange(-25.0f, 25.0f);
 
                 upperArmPos = vec3(randomX, randomY, randomZ);
-                lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
+                update();
                 keyPressed = true;
             }             
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {   // check for release so it doesn't do it constantly
                 keyPressed = false;
         }
-        // ------------------------------ MODEL SCALE -----------------------------------------
+
+        // --------------------------------------------------------------------------------------
+        // ------------------------------ MODEL SCALE -------------------------------------------
+        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {      // SCALE UP
             modelScale += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {     // SCALE DOWN
             modelScale -= 0.01;
         }
-        // ------------------------------ UPDATE MODEL POSITION --------------------------------
+
+        // --------------------------------------------------------------------------------------
+        // ------------------------------ UPDATE MODEL POSITION ---------------------------------
+        // --------------------------------------------------------------------------------------
         shift = false;
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) { 
             shift = true;
@@ -659,50 +636,38 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {     
             if(shift) {                                         // MOVE MODEL LEFT
                upperArmPos -= vec3(0.1f, 0.0f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
+               update();
             } else {                                            // ROTATE 5 DEGREE COUNTERCLOCKWISE
             upperArmRotationXAngle  += 5.0f;
-            lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPos = racketHandlePos + racketPosOffset;
+            update();
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL RIGHT
                 upperArmPos += vec3(0.1f * cos(radians(upperArmRotationXAngle)), 0.0f, -0.1f * sin(radians(upperArmRotationXAngle)));
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
+                update();
             } else {                                            // ROTATE 5 DEGREE CLOCKWISE
             upperArmRotationXAngle  -= 5.0;
-            lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
-            lowerArmPos = upperArmPos + lowerArmPosOffset;
-            racketHandlePos = lowerArmPos + racketHandlePosOffset;
-            racketPos = racketHandlePos + racketPosOffset;
+            update();
             }
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL UP
                 upperArmPos += vec3(0.0f, 0.1f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
+                update();
             } else {
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
             if(shift) {                                         // MOVE MODEL DOWN
                 upperArmPos -= vec3(0.0f, 0.1f, 0.0f);
-                lowerArmPos = upperArmPos + lowerArmPosOffset;
-                racketHandlePos = lowerArmPos + racketHandlePosOffset;
-                racketPos = racketHandlePos + racketPosOffset;
+                update();
             } else {
             }
         }
-        // ------------------------------ CHANGE WORLD ORIENTATION --------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------------------ CHANGE WORLD ORIENTATION ------------------------------
+        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
             cameraAngleX += 1.0f;
         }
@@ -715,16 +680,15 @@ int main(int argc, char*argv[])
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {        // move camera forward
             cameraAngleY += 1.0f;
         }
-
-        if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) // ZOOM OUT
-        {
+        if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) { // ZOOM OUT 
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
             cameraAngleZ = 0.0f;
         }
 
-
-        // ------------------- RENDERING MODE ---------------------------------------
+        // --------------------------------------------------------------------------------------
+        // ------------------- RENDERING MODE ---------------------------------------------------
+        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) { // RENDER TRIANGLES   
             renderingMode = GL_TRIANGLES;
         }
@@ -735,20 +699,18 @@ int main(int argc, char*argv[])
             renderingMode = GL_POINTS;
         }
 
-
-
-        // --------------------- CAMERA PAN AND TILT  ------------------------------
+        // --------------------------------------------------------------------------------------
+        // --------------------- CAMERA PAN AND TILT  -------------------------------------------
+        // --------------------------------------------------------------------------------------
         const float cameraAngularSpeed = 15.0f;
         float theta;
         float phi;
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
             cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-            if (cameraHorizontalAngle > 360)
-            {
+            if (cameraHorizontalAngle > 360) {
                 cameraHorizontalAngle -= 360;
             }
-            else if (cameraHorizontalAngle < -360)
-            {
+            else if (cameraHorizontalAngle < -360) {
                 cameraHorizontalAngle += 360;
             }
         }
@@ -762,8 +724,9 @@ int main(int argc, char*argv[])
         cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
 
-
-        // --------------------- ZOOM IN AND ZOOM OUT ------------------------------
+        // --------------------------------------------------------------------------------------
+        // --------------------- ZOOM IN AND ZOOM OUT -------------------------------------------
+        // --------------------------------------------------------------------------------------
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             if(dx < 0) {                // ZOOM OUT
                 if (fov < 179.0) {
@@ -792,4 +755,122 @@ int main(int argc, char*argv[])
     glfwTerminate();
     
     return 0;
+}
+
+
+void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
+    int k1, k2;
+    for (int i = 0; i <= slices; i++) {
+        k1 = i * (stacks + 1);
+        k2 = k1 + stacks + 1;
+        for (int j = 0; j <= stacks; j++, k1++, k2++) {
+            vec3 v;
+            float theta = 2.0f * M_PI * j / slices;
+            float phi = M_PI * i / stacks;
+            v.x = radius * cos(theta) * sin(phi);
+            v.y = radius * sin(theta) * sin(phi);
+            v.z = radius * cos(phi);
+            vertices.push_back(v);
+            vec3 n(v.x / radius, v.y / radius, v.z / radius);
+            normals.push_back(n);
+            vec2 m;
+            m.x = (float)j / (float)slices;
+            m.y = (float)i / (float)stacks;
+            UV.push_back(m);
+
+            if (i != 0) {
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
+            }
+
+            // k1+1 => k2 => k2+1
+            if (i != (slices - 1)) {
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
+            }
+        }
+    }
+}
+
+GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices) {
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO); //Becomes active VAO
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+    //Vertex VBO setup
+    GLuint vertices_VBO;
+    glGenBuffers(1, &vertices_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    //Normals VBO setup
+    GLuint normals_VBO;
+    glGenBuffers(1, &normals_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+
+    //UVs VBO setup
+    GLuint uvs_VBO;
+    glGenBuffers(1, &uvs_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(2);
+
+    //EBO setup
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+    vertexCount = vertexIndices.size();
+    return VAO;
+}
+
+GLuint loadTexture(const char* filename) {
+    // Step1 Create and bind textures
+    GLuint textureId = 0;
+    glGenTextures(1, &textureId);
+    assert(textureId != 0);
+
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    // Step2 Set filter parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Step3 Load Textures with dimension data
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    if (!data)
+    {
+        std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
+        return 0;
+    }
+
+    // Step4 Upload the texture to the PU
+    GLenum format = 0;
+    if (nrChannels == 1)
+        format = GL_RED;
+    else if (nrChannels == 3)
+        format = GL_RGB;
+    else if (nrChannels == 4)
+        format = GL_RGBA;
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
+        0, format, GL_UNSIGNED_BYTE, data);
+
+    // Step5 Free resources
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return textureId;
 }
