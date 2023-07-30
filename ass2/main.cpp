@@ -119,54 +119,54 @@ int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentSh
 
 int createVertexBufferObject() {
     // Cube model
-    const TexturedColoredVertex VertexArray[] = {  // position,                            color
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
+    const TexturedColoredVertex vertexArray[] = {  // position,                            color
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)), //left - red
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
 
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)), // far - blue
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // far - blue
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // bottom - turquoise
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f)), // near - green
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)), // right - purple
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)), // top - yellow
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f))
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f))
     };
         
     // Create a vertex array
@@ -286,9 +286,8 @@ int main(int argc, char*argv[])
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
     // Load Textures
+    GLuint grassTextureID = loadTexture("assets/textures/cement.jpg");
     GLuint brickTextureID = loadTexture("assets/textures/brick.jpg");
-    GLuint cementTextureID = loadTexture("assets/textures/cement.jpg");
-    GLuint grassTextureID = loadTexture("assets/textures/grass.jpg");
 
     // Compile and link shaders here ...
     int shaderProgram = compileAndLinkShaders();
@@ -320,8 +319,8 @@ int main(int argc, char*argv[])
                              cameraPosition + cameraLookAt,  // center
                              cameraUp ); // up
     
-    GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+    // GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+    // glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
     
     setViewMatrix(shaderProgram, viewMatrix);
     setViewMatrix(texturedShaderProgram, viewMatrix);
@@ -339,7 +338,7 @@ int main(int argc, char*argv[])
     vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
     vector<glm::vec2> UVs;
-    createSPhere(vertices, normals, UVs, vertexIndices, 5.0f, 50, 50);
+    createSPhere(vertices, normals, UVs, vertexIndices, 10.0f, 40, 40);
     int sphereVertices;
     GLuint sphereVAO = setupModelEBO(sphereVertices, vertices, normals, UVs, vertexIndices);
 
@@ -366,18 +365,38 @@ int main(int argc, char*argv[])
 
         // Each frame, reset color of each pixel to glClearColor
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glActiveTexture(GL_TEXTURE0);
 
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint colorLocation = glGetUniformLocation(shaderProgram, "customColor");
         glUniform3fv(colorLocation, 1, tempColor);
+        GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
 
         // Draw Geometry
         glBindVertexArray(vao);
 
+        // ---------------------------------------------------------------------
+        
+        glUseProgram(texturedShaderProgram);
+        tempColor[0] = 1.0f;        // Value for Red
+        tempColor[1] = 1.0f;        // Value for Green
+        tempColor[2] = 1.0f;        // Value for Blue
+        glUniform3fv(texColorLocation, 1, tempColor);
+
+        glActiveTexture(GL_TEXTURE0);
+        GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
+        glBindTexture(GL_TEXTURE_2D, brickTextureID);
+        glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
+
+        GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
+        mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
+            * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
+        glUniformMatrix4fv(groundMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
+        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+
         // --------------------------------------------------------------------------------------
         //  ----------------------- Draw Grid 100x100 -------------------------------------------
         // --------------------------------------------------------------------------------------
+        glUseProgram(shaderProgram);
         GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         // Change shader Color to Yellow
         tempColor[0] = 0.9f;        // Value for Red
@@ -541,21 +560,28 @@ int main(int argc, char*argv[])
         // ------------------- TENNIS BALL ------------------------------------------------------
         // --------------------------------------------------------------------------------------
         {
-            glUseProgram(textureShaderProgram);
-            GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
-            glBindTexture(GL_TEXTURE_2D, brickTextureID);
-            glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
+            glBindVertexArray(0);
+            glBindVertexArray(activeVAO);
+
+            glUseProgram(texturedShaderProgram);
+            tempColor[0] = 0.3f;        // Value for Red
+            tempColor[1] = 1.0f;        // Value for Green
+            tempColor[2] = 0.3f;        // Value for Blue
+            glUniform3fv(texColorLocation, 1, tempColor);
+
+            glBindTexture(GL_TEXTURE_2D, grassTextureID);
+
 
             mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f))
                 * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
-            glBindVertexArray(0);
-            glBindVertexArray(activeVAO);
             // Draw geometry
             glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
             // Unbind geometry
             glBindVertexArray(0);
         }
+        glUseProgram(shaderProgram);
         
          // End Frame
         glfwSwapBuffers(window);
@@ -727,6 +753,8 @@ int main(int argc, char*argv[])
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp) * rotate(mat4(1.0f), radians(cameraAngleX), vec3(0.0f, 1.0f, 0.0f)) *  rotate(mat4(1.0f), radians(cameraAngleY), vec3(1.0f, 0.0f, 0.0f));
         GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
         glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+
+        setViewMatrix(texturedShaderProgram, viewMatrix);
     }
     
     // Shutdown GLFW
@@ -826,6 +854,9 @@ GLuint loadTexture(const char* filename) {
     // Step2 Set filter parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
 
     // Step3 Load Textures with dimension data
     int width, height, nrChannels;
@@ -846,7 +877,7 @@ GLuint loadTexture(const char* filename) {
         format = GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height,
         0, format, GL_UNSIGNED_BYTE, data);
-
+    glGenerateMipmap(GL_TEXTURE_2D);
     // Step5 Free resources
     stbi_image_free(data);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -861,6 +892,7 @@ const char* getTexturedVertexShaderSource() {
         "layout (location = 1) in vec3 aColor;"
         "layout (location = 2) in vec2 aUV;"
         ""
+        "uniform vec3 customColor = vec3(1.0f, 1.0f, 1.0f);"
         "uniform mat4 worldMatrix;"
         "uniform mat4 viewMatrix = mat4(1.0);"  // default value for view matrix (identity)
         "uniform mat4 projectionMatrix = mat4(1.0);"
@@ -870,7 +902,7 @@ const char* getTexturedVertexShaderSource() {
         ""
         "void main()"
         "{"
-        "   vertexColor = aColor;"
+        "   vertexColor = customColor;"
         "   mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;"
         "   gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);"
         "   vertexUV = aUV;"
@@ -883,11 +915,12 @@ const char* getTexturedFragmentShaderSource() {
         "in vec3 vertexColor;"
         "in vec2 vertexUV;"
         "uniform sampler2D textureSampler;"
+        "uniform mat4 textureMatrix = mat4(1.0f);"
         ""
         "out vec4 FragColor;"
         "void main()"
         "{"
-        "   vec4 textureColor = texture( textureSampler, vertexUV );"
+        "   vec4 textureColor = texture(textureSampler, vertexUV );"
         "   FragColor = textureColor * vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
         "}";
 }
