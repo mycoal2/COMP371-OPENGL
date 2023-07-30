@@ -286,7 +286,7 @@ int main(int argc, char*argv[])
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
     // Load Textures
-    GLuint grassTextureID = loadTexture("assets/textures/cement.jpg");
+    GLuint grassTextureID = loadTexture("assets/textures/tenis123.jpg");
     GLuint brickTextureID = loadTexture("assets/textures/brick.jpg");
 
     // Compile and link shaders here ...
@@ -338,7 +338,7 @@ int main(int argc, char*argv[])
     vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
     vector<glm::vec2> UVs;
-    createSPhere(vertices, normals, UVs, vertexIndices, 10.0f, 40, 40);
+    createSPhere(vertices, normals, UVs, vertexIndices, 3.0f, 40, 40);
     int sphereVertices;
     GLuint sphereVAO = setupModelEBO(sphereVertices, vertices, normals, UVs, vertexIndices);
 
@@ -564,9 +564,9 @@ int main(int argc, char*argv[])
             glBindVertexArray(activeVAO);
 
             glUseProgram(texturedShaderProgram);
-            tempColor[0] = 0.3f;        // Value for Red
+            tempColor[0] = 1.0f;        // Value for Red
             tempColor[1] = 1.0f;        // Value for Green
-            tempColor[2] = 0.3f;        // Value for Blue
+            tempColor[2] = 1.0f;        // Value for Blue
             glUniform3fv(texColorLocation, 1, tempColor);
 
             glBindTexture(GL_TEXTURE_2D, grassTextureID);
