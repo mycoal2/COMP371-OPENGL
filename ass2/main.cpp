@@ -1,11 +1,4 @@
-//
-// COMP 371 Labs Framework
-//
-// Created by Nicolas Bergeron on 20/06/2019.
-//
-// Inspired by the following tutorials:
-// - https://learnopengl.com/Getting-started/Hello-Window
-// - https://learnopengl.com/Getting-started/Hello-Triangle
+
 
 #define M_PI   3.14159265358979323846264338327950288
 #include <iostream>
@@ -24,88 +17,26 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
+#include "include/shaderloader.h"
 
 using namespace glm;
 using namespace std;
 
 // OpenGL Sphere by Song Ho - http://www.songho.ca/opengl/gl_sphere.html
 
+void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix);
+void setViewMatrix(int shaderProgram, mat4 viewMatrix);
+
 void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks);
 GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices);
 
+int createCubeVAO();
 
 GLuint loadTexture(const char* filename);
-const char* getTexturedVertexShaderSource();
-const char* getTexturedFragmentShaderSource();
 
-const char* getVertexShaderSource() {
-    // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
-    return
-                "#version 330 core\n"
-                "layout (location = 0) in vec3 aPos;"
-                "layout (location = 1) in vec3 aColor;"
-                ""
-                "uniform vec3 customColor;"
-                "uniform mat4 worldMatrix;"
-                "uniform mat4 viewMatrix = mat4(1.0);"
-                "uniform mat4 projectionMatrix = mat4(1.0);"
-                ""
-                "out vec3 vertexColor;"
-                "void main()"
-                "{"
-                "   vertexColor = customColor;"
-                "   mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;"
-                "   gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);"
-                "}";
-}
+float randomInRange(float lowerBound, float upperBound);
 
-
-const char* getFragmentShaderSource() {
-    return
-                "#version 330 core\n"
-                "in vec3 vertexColor;"
-                "out vec4 FragColor;"
-                "void main()"
-                "{"
-                "   FragColor = vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
-                "}";
-}
-
-const char* getShadowVertexShaderSource() {
-    return
-        "#version 330 core"
-        ""
-        "layout(location = 0) in vec3 position;"
-        "uniform mat4 transform_in_light_space;"
-        ""
-        "void main()"
-        "{"
-        "   mat4 scale_bias_matrix = mat4(vec4(0.5, 0.0, 0.0, 0.0),"
-        "                               vec4(0.0, 0.5, 0.0, 0.0),"
-        "                               vec4(0.0, 0.0, 0.5, 0.0),"
-        "                               vec4(0.5, 0.5, 0.5, 1.0));"
-        "   gl_Position ="
-        "                   scale_bias_matrix * // bias the depth map coordinates"
-        "                   transform_in_light_space * vec4(position, 1.0);"
-        "}";
-}
-
-const char* getShadowFragmentShaderSource() {
-    return
-        "#version 330 core"
-        ""
-        "out vec4 FragColor;"
-        "in vec4 gl_FragCoord;"
-        ""
-        "void main()"
-        "{"
-        "   gl_FragDepth = gl_FragCoord.z;"
-        "   FragColor = vec4(vec3(gl_FragCoord.z), 1.0f);"
-        "}";
-}
-
-struct TexturedColoredVertex
-{
+struct TexturedColoredVertex {
     TexturedColoredVertex(vec3 _position, vec3 _color, vec2 _uv)
         : position(_position), color(_color), uv(_uv) {}
 
@@ -113,122 +44,6 @@ struct TexturedColoredVertex
     vec3 color;
     vec2 uv;
 };
-
-int compileAndLinkShaders();
-int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource);
-
-int createVertexBufferObject() {
-    // Cube model
-    const TexturedColoredVertex vertexArray[] = {  // position,                            color
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)), //left - red
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // far - blue
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // bottom - turquoise
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)), // near - green
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // right - purple
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)), // top - yellow
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(1.0f, 1.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 1.0f))
-    };
-        
-    // Create a vertex array
-    GLuint vertexArrayObject;
-    glGenVertexArrays(1, &vertexArrayObject);
-    glBindVertexArray(vertexArrayObject);
-     
-    // Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
-    GLuint vertexBufferObject;
-    glGenBuffers(1, &vertexBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), vertexArray, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
-        3,                   // size
-        GL_FLOAT,            // type
-        GL_FALSE,            // normalized?
-        sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
-        (void*)0             // array buffer offset
-    );
-    glEnableVertexAttribArray(0);
-
-
-    glVertexAttribPointer(1,                            // attribute 1 matches aColor in Vertex Shader
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(TexturedColoredVertex),
-        (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
-    );
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(TexturedColoredVertex),
-        (void*)(2 * sizeof(vec3))      // uv is offseted by 2 vec3 (comes after position and color)
-    );
-    glEnableVertexAttribArray(2);
-
-    
-    return vertexBufferObject;
-}
-
-void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix) {
-    glUseProgram(shaderProgram);
-    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
-    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
-}
-void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
-    glUseProgram(shaderProgram);
-    GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-}
-
-float randomInRange(float lowerBound, float upperBound) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(lowerBound, upperBound);
-    return dist(gen);
-}
 
 float modelScale = 1;
 float upperArmRotationXAngle = 0;
@@ -244,6 +59,15 @@ vec3 racketHandlePos = lowerArmPos + racketHandlePosOffset;
 vec3 racketPos = racketHandlePos + racketPosOffset;
 vec3 racketNetPos = racketHandlePos + racketPosOffset;
 
+vec3 cameraPosition(0.0f, 15.0f, 40.0f);
+vec3 cameraLookAt(0.0f,-5.0f, -1.0f);
+vec3 cameraUp(0.0f, 1.0f, 0.0f);
+float cameraAngleX = 0.0f;
+float cameraAngleY = 0.0f;
+float cameraAngleZ = 0.0f;
+float cameraHorizontalAngle = 90.0f;
+float cameraVerticalAngle = 0.0f;
+
 void update() {
     lowerArmPos = upperArmPos + lowerArmPosOffset;
     racketHandlePos = lowerArmPos + racketHandlePosOffset;
@@ -254,56 +78,47 @@ void update() {
 bool keyPressed = false;
 bool shift = false;
 int renderingMode = GL_TRIANGLES;
+GLFWwindow* window = nullptr;
 
-int main(int argc, char*argv[])
-{
-    // Initialize GLFW and OpenGL version
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+int main(int argc, char*argv[]) {
+    { // SETUP context
+        // Initialize GLFW and OpenGL version
+        glfwInit();
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    // Create Window and rendering context using GLFW, resolution is 1024x768
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "Comp371 - Quiz 1", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+        // Create Window and rendering context using GLFW, resolution is 1024x768
+        window = glfwCreateWindow(1024, 768, "Comp371 - Quiz 1", NULL, NULL);
+        if (window == NULL) {
+            std::cerr << "Failed to create GLFW window" << std::endl;
+            glfwTerminate();
+            return -1;
+        }
+        glfwMakeContextCurrent(window);
+        // Initialize GLEW
+        glewExperimental = true; // Needed for core profile
+        if (glewInit() != GLEW_OK) {
+            std::cerr << "Failed to create GLEW" << std::endl;
+            glfwTerminate();
+            return -1;
+        }
     }
-    glfwMakeContextCurrent(window);
-    // Initialize GLEW
-    glewExperimental = true; // Needed for core profile
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to create GLEW" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
+    
     // green background
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
     // Load Textures
-    GLuint grassTextureID = loadTexture("assets/textures/tenis123.jpg");
-    GLuint brickTextureID = loadTexture("assets/textures/brick.jpg");
-
+    GLuint tennisTextureID = loadTexture("assets/textures/tennisTexture.jpg");
+    GLuint clayTextureID = loadTexture("assets/textures/clay.jpg");
+    
     // Compile and link shaders here ...
-    int shaderProgram = compileAndLinkShaders();
-    glUseProgram(shaderProgram);
-
-    int texturedShaderProgram = compileAndLinkShaders(getTexturedVertexShaderSource(), getTexturedFragmentShaderSource());
-
-
-    vec3 cameraPosition(0.0f, 15.0f, 40.0f);
-    vec3 cameraLookAt(0.0f,-5.0f, -1.0f);
-    vec3 cameraUp(0.0f, 1.0f, 0.0f);
-    float cameraAngleX = 0.0f;
-    float cameraAngleY = 0.0f;
-    float cameraAngleZ = 0.0f;
-    float cameraHorizontalAngle = 90.0f;
-    float cameraVerticalAngle = 0.0f;
+    string shaderPathPrefix = "assets/shaders/";
+    int shaderProgram           = loadSHADER(shaderPathPrefix + "temp_vertex.glsl", shaderPathPrefix + "temp_fragment.glsl");
+    int texturedShaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
+    int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
     float fov = 70.0f;
     // Set projection matrix for shader, this won't change
@@ -328,7 +143,7 @@ int main(int argc, char*argv[])
     setProjectionMatrix(shaderProgram, projectionMatrix);
     setProjectionMatrix(texturedShaderProgram, projectionMatrix);
 
-    int vao = createVertexBufferObject();
+    int vao = createCubeVAO();
 
     // ---------------------------------------------------------
     // -------------------- SPHERE -----------------------------
@@ -354,7 +169,7 @@ int main(int argc, char*argv[])
     glfwGetCursorPos(window, &lastMousePosX, &lastMousePosY);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-
+    float texColor[3] = {1.0f, 1.0f, 1.0f};
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -375,16 +190,14 @@ int main(int argc, char*argv[])
         glBindVertexArray(vao);
 
         // ---------------------------------------------------------------------
-        
+        // -------------------------- CLAY GROUND ------------------------------
+        // ---------------------------------------------------------------------
         glUseProgram(texturedShaderProgram);
-        tempColor[0] = 1.0f;        // Value for Red
-        tempColor[1] = 1.0f;        // Value for Green
-        tempColor[2] = 1.0f;        // Value for Blue
-        glUniform3fv(texColorLocation, 1, tempColor);
+        glUniform3fv(texColorLocation, 1, texColor);
 
         glActiveTexture(GL_TEXTURE0);
         GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
-        glBindTexture(GL_TEXTURE_2D, brickTextureID);
+        glBindTexture(GL_TEXTURE_2D, clayTextureID);
         glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
         GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
@@ -406,14 +219,14 @@ int main(int argc, char*argv[])
         for(float x = -50; x < 50; x++) {
             // glUseProgram(shaderProgram2);
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
-            * scale(mat4(1.0f), vec3(0.05f, 0.05f, 100.0f));
+            * scale(mat4(1.0f), vec3(0.1f, 0.1f, 100.0f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
 
             // glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             
             mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) 
-            * scale(mat4(1.0f), vec3(100.0f, 0.05f, 0.05f));
+            * scale(mat4(1.0f), vec3(100.0f, 0.10f, 0.10f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
 
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
@@ -564,12 +377,9 @@ int main(int argc, char*argv[])
             glBindVertexArray(activeVAO);
 
             glUseProgram(texturedShaderProgram);
-            tempColor[0] = 1.0f;        // Value for Red
-            tempColor[1] = 1.0f;        // Value for Green
-            tempColor[2] = 1.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            glUniform3fv(texColorLocation, 1, texColor);
 
-            glBindTexture(GL_TEXTURE_2D, grassTextureID);
+            glBindTexture(GL_TEXTURE_2D, tennisTextureID);
 
 
             mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f))
@@ -763,6 +573,16 @@ int main(int argc, char*argv[])
     return 0;
 }
 
+void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+}
+void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+}
 
 void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
     int k1, k2;
@@ -799,7 +619,6 @@ void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& U
         }
     }
 }
-
 GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices) {
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
@@ -842,12 +661,106 @@ GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::v
     return VAO;
 }
 
+int createCubeVAO() {
+    // Cube model
+    const TexturedColoredVertex vertexArray[] = {  // position,                            color
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)), //left - red
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 1.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(10.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)), // far - blue
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(1.0f, 1.0f, 1.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(1.0f, 1.0f, 1.0f), vec2(0.0f, 10.0f))
+    };
+        
+    // Create a vertex array
+    GLuint vertexArrayObject;
+    glGenVertexArrays(1, &vertexArrayObject);
+    glBindVertexArray(vertexArrayObject);
+     
+    // Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
+    GLuint vertexBufferObject;
+    glGenBuffers(1, &vertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), vertexArray, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
+        3,                   // size
+        GL_FLOAT,            // type
+        GL_FALSE,            // normalized?
+        sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
+        (void*)0             // array buffer offset
+    );
+    glEnableVertexAttribArray(0);
+
+
+    glVertexAttribPointer(1,                            // attribute 1 matches aColor in Vertex Shader
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)sizeof(vec3)      // color is offseted a vec3 (comes after position)
+    );
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TexturedColoredVertex),
+        (void*)(2 * sizeof(vec3))      // uv is offseted by 2 vec3 (comes after position and color)
+    );
+    glEnableVertexAttribArray(2);
+
+    
+    return vertexBufferObject;
+}
+
 GLuint loadTexture(const char* filename) {
     // Step1 Create and bind textures
     GLuint textureId = 0;
     glGenTextures(1, &textureId);
     assert(textureId != 0);
-
 
     glBindTexture(GL_TEXTURE_2D, textureId);
 
@@ -857,12 +770,10 @@ GLuint loadTexture(const char* filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-
     // Step3 Load Textures with dimension data
     int width, height, nrChannels;
     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
-    if (!data)
-    {
+    if (!data) {
         std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
         return 0;
     }
@@ -884,164 +795,9 @@ GLuint loadTexture(const char* filename) {
     return textureId;
 }
 
-const char* getTexturedVertexShaderSource() {
-    // For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
-    return
-        "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;"
-        "layout (location = 1) in vec3 aColor;"
-        "layout (location = 2) in vec2 aUV;"
-        ""
-        "uniform vec3 customColor = vec3(1.0f, 1.0f, 1.0f);"
-        "uniform mat4 worldMatrix;"
-        "uniform mat4 viewMatrix = mat4(1.0);"  // default value for view matrix (identity)
-        "uniform mat4 projectionMatrix = mat4(1.0);"
-        ""
-        "out vec3 vertexColor;"
-        "out vec2 vertexUV;"
-        ""
-        "void main()"
-        "{"
-        "   vertexColor = customColor;"
-        "   mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;"
-        "   gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);"
-        "   vertexUV = aUV;"
-        "}";
-}
-
-const char* getTexturedFragmentShaderSource() {
-    return
-        "#version 330 core\n"
-        "in vec3 vertexColor;"
-        "in vec2 vertexUV;"
-        "uniform sampler2D textureSampler;"
-        "uniform mat4 textureMatrix = mat4(1.0f);"
-        ""
-        "out vec4 FragColor;"
-        "void main()"
-        "{"
-        "   vec4 textureColor = texture(textureSampler, vertexUV );"
-        "   FragColor = textureColor * vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
-        "}";
-}
-
-int compileAndLinkShaders() {
-    // Create the shaders
-    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-    GLint Result = GL_FALSE;
-    int InfoLogLength;
-
-    const char* tempVertexShader;
-    const char* tempFragmentShader;
-    tempVertexShader = getVertexShaderSource();
-    tempFragmentShader = getFragmentShaderSource();
-
-    // Compile Vertex Shader
-    cout << "Compiling shader : Vertex Shader" << endl;
-    char const* VertexSourcePointer = tempVertexShader;
-    glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-    glCompileShader(VertexShaderID);
-
-    // Check Vertex Shader
-    glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-        printf("%s\n", &VertexShaderErrorMessage[0]);
-    }
-
-    // Compile Fragment Shader
-    cout << "Compiling shader : Fragment Shader" << endl;
-    char const* FragmentSourcePointer = tempFragmentShader;
-    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-    glCompileShader(FragmentShaderID);
-
-    // Check Fragment Shader
-    glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-    glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> FragmentShaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-        printf("%s\n", &FragmentShaderErrorMessage[0]);
-    }
-
-    // Link the program
-    printf("Linking program\n");
-    GLuint ProgramID = glCreateProgram();
-    glAttachShader(ProgramID, VertexShaderID);
-    glAttachShader(ProgramID, FragmentShaderID);
-    glLinkProgram(ProgramID);
-
-    // Check the program
-    glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-    glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-    if (InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-        glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-        printf("%s\n", &ProgramErrorMessage[0]);
-    }
-
-    glDetachShader(ProgramID, VertexShaderID);
-    glDetachShader(ProgramID, FragmentShaderID);
-
-    glDeleteShader(VertexShaderID);
-    glDeleteShader(FragmentShaderID);
-
-    return ProgramID;
-}
-
-int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource)
-{
-    // compile and link shader program
-    // return shader program id
-    // ------------------------------------
-
-    // vertex shader
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // fragment shader
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // link shaders
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return shaderProgram;
+float randomInRange(float lowerBound, float upperBound) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(lowerBound, upperBound);
+    return dist(gen);
 }
