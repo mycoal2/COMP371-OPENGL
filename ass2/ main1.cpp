@@ -17,14 +17,16 @@
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb_image.h"
-#include "../include/shaderloader.h"
+#include "include/stb_image.h"
+#include "include/shaderloader.h"
 
 using namespace glm;
 using namespace std;
 
 // OpenGL Sphere by Song Ho - http://www.songho.ca/opengl/gl_sphere.html
 
+void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix);
+void setViewMatrix(int shaderProgram, mat4 viewMatrix);
 void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value);
 void SetUniformVec3(GLuint shader_id, const char* uniform_name, vec3 uniform_value);
 template <class T>
@@ -117,12 +119,12 @@ int main(int argc, char*argv[]) {
     glClearColor(0.20f, 0.3f, 0.3f, 1.0f);
 
     // Load Textures
-    GLuint tennisTextureID = loadTexture("../assets/textures/tennisTexture.jpg");
-    GLuint clayTextureID = loadTexture("../assets/textures/clay.jpg");
+    GLuint tennisTextureID = loadTexture("assets/textures/tennisTexture.jpg");
+    GLuint clayTextureID = loadTexture("assets/textures/clay.jpg");
 
     // Compile and link shaders here ...
-    string shaderPathPrefix = "../assets/shaders/";
-    int shaderProgram           = loadSHADER(shaderPathPrefix + "scene_vertex.glsl", shaderPathPrefix + "scene_fragment.glsl");
+    string shaderPathPrefix = "assets/shaders/";
+    int shaderProgram           = loadSHADER(shaderPathPrefix + "temp_vertex.glsl", shaderPathPrefix + "temp_fragment.glsl");
     int texturedShaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
@@ -176,27 +178,14 @@ int main(int argc, char*argv[]) {
                              cameraUp ); // up
     
 
-    // Set view matrix on both shaders
-    SetUniformMat4(shaderProgram, "view_matrix", viewMatrix);
-    SetUniformMat4(texturedShaderProgram, "viewMatrix", viewMatrix);
+    setViewMatrix(shaderProgram, viewMatrix);
+    setViewMatrix(texturedShaderProgram, viewMatrix);
 
-    SetUniformMat4(shaderProgram, "projection_matrix", projectionMatrix);
-    SetUniformMat4(texturedShaderProgram, "projectionMatrix", projectionMatrix);
+    setProjectionMatrix(shaderProgram, projectionMatrix);
+    setProjectionMatrix(texturedShaderProgram, projectionMatrix);
 
-    float lightAngleOuter = 30.0;
-    float lightAngleInner = 20.0;
-    // Set light cutoff angles on scene shader
-    SetUniform1Value(shaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
-    SetUniform1Value(shaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
-
-    // Set light color on scene shader
-    SetUniformVec3(shaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
-
-    // Set object color on scene shader
-    // SetUniformVec3(shaderProgram, "object_color", vec3(1.0, 1.0, 1.0));
-
-    // CREATE CUBE VAO
     int vao = createCubeVAO();
+
     // ---------------------------------------------------------
     // -------------------- SPHERE -----------------------------
     // ---------------------------------------------------------
@@ -222,60 +211,28 @@ int main(int argc, char*argv[]) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     float texColor[3] = {1.0f, 1.0f, 1.0f};
-
-    float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
-    GLuint colorLocation = glGetUniformLocation(shaderProgram, "customColor");
-    glUniform3fv(colorLocation, 1, tempColor);
-    GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
-
-
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
         
-        // glUseProgram(shaderProgram);
-        // light parameters
-        vec3 lightPosition = vec3(1.0f, 10.0f, 0.0f); // the location of the light in 3D space
-        vec3 lightFocus = upperArmPos;      // the point in 3D space the light "looks" at
-        vec3 lightDirection = normalize(lightFocus - lightPosition);
-
-        float lightNearPlane = 1.0f;
-        float lightFarPlane = 180.0f;
-
-        mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
-        //perspective(20.0f, (float)DEPTH_MAP_TEXTURE_SIZE / (float)DEPTH_MAP_TEXTURE_SIZE, lightNearPlane, lightFarPlane);
-        mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
-        mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-
-        // Set light space matrix on both shaders
-        SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
-        SetUniformMat4(shaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
-
-        // Set light far and near planes on scene shader
-        SetUniform1Value(shaderProgram, "light_near_plane", lightNearPlane);
-        SetUniform1Value(shaderProgram, "light_far_plane", lightFarPlane);
-
-        // Set light position on scene shader
-        SetUniformVec3(shaderProgram, "light_position", lightPosition);
-
-        // Set light direction on scene shader
-        SetUniformVec3(shaderProgram, "light_direction", lightDirection);
+        glUseProgram(shaderProgram);
 
         // Each frame, reset color of each pixel to glClearColor
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
+        GLuint colorLocation = glGetUniformLocation(shaderProgram, "customColor");
+        glUniform3fv(colorLocation, 1, tempColor);
+        GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
 
-        // SetUniformVec3(shaderProgram, "object_color", vec3(1.0f, 1.0f, 0.0f));
-
-
+        // Draw Geometry
+        glBindVertexArray(vao);
 
         // ---------------------------------------------------------------------
         // -------------------------- CLAY GROUND ------------------------------
         // ---------------------------------------------------------------------
-        // Draw Geometry
-        glBindVertexArray(vao);
         glUseProgram(texturedShaderProgram);
         glUniform3fv(texColorLocation, 1, texColor);
 
@@ -289,21 +246,17 @@ int main(int argc, char*argv[]) {
             * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
         glUniformMatrix4fv(groundMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-        glBindVertexArray(0);
+
         // --------------------------------------------------------------------------------------
         //  ----------------------- Draw Grid 100x100 -------------------------------------------
         // --------------------------------------------------------------------------------------
-        // Draw Geometry
-        glBindVertexArray(vao);
         glUseProgram(shaderProgram);
-        GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "world_matrix");
+        GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
         // Change shader Color to Yellow
         tempColor[0] = 0.9f;        // Value for Red
         tempColor[1] = 0.9f;        // Value for Green
         tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        // SetUniformVec3(shaderProgram, "object_color", vec3(0.9, 0.9, 0.0));
-
         for(float x = -50; x < 50; x++) {
             // glUseProgram(shaderProgram2);
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
@@ -327,8 +280,6 @@ int main(int argc, char*argv[]) {
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 1.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        // SetUniformVec3(shaderProgram, "object_color", vec3(1.0, 1.0, 1.0));
-
         // THIS IS 1 UNIT 
         // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
         mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
@@ -339,8 +290,6 @@ int main(int argc, char*argv[]) {
         tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        // SetUniformVec3(shaderProgram, "object_color", vec3(1.0, 0.0, 0.0));
-
         
         mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
         * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
@@ -352,8 +301,6 @@ int main(int argc, char*argv[]) {
         tempColor[1] = 1.0f;        // Value for Green
         tempColor[2] = 0.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        // SetUniformVec3(shaderProgram, "object_color", vec3(0.0, 1.0, 0.0));
-
         
         mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
         * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
@@ -365,43 +312,35 @@ int main(int argc, char*argv[]) {
         tempColor[1] = 0.0f;        // Value for Green
         tempColor[2] = 1.0f;        // Value for Blue
         glUniform3fv(colorLocation, 1, tempColor);
-        // SetUniformVec3(shaderProgram, "object_color", vec3(0.0, 0.0, 1.0));
-
         
         mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
         * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
         glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-        glBindVertexArray(0);
+
         // --------------------------------------------------------------------------------------
         // ------------------ CREATING MODEL ----------------------------------------------------
         // --------------------------------------------------------------------------------------
         {
-            // ------------------ UPPER ARM ---------------------------------------------------------            
+            // ------------------ UPPER ARM ---------------------------------------------------------
             tempColor[0] = 0.8f;        // Value for Red
             tempColor[1] = 0.7f;        // Value for Green
             tempColor[2] = 0.6f;        // Value for Blue
-            // glUniform3fv(colorLocation, 1, tempColor);
-            glBindVertexArray(vao);
-            SetUniformVec3(shaderProgram, "object_color", vec3(0.8, 0.7, 0.6));
-
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
             mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), upperArmPos)
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
                 * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f))
                 * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
-            // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
-            SetUniformMat4(shaderProgram, "model_matrix", upperArmWorldMatrix);
-            SetUniformMat4(shadowShaderProgram, "model_matrix", upperArmWorldMatrix);
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-        
+
             // ------------------ LOWER ARM ---------------------------------------------------------
             tempColor[0] = 0.7f;        // Value for Red
             tempColor[1] = 0.6f;        // Value for Green
             tempColor[2] = 0.5f;        // Value for Blue
-            // glUniform3fv(colorLocation, 1, tempColor);
-            SetUniformVec3(shaderProgram, "object_color", vec3(0.7, 0.6, 0.5));
-
+            glUniform3fv(colorLocation, 1, tempColor);
             // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
@@ -409,27 +348,23 @@ int main(int argc, char*argv[]) {
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
                 * translate(mat4(1.0f), lowerArmPosOffset)
                 * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
-            
-            // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
-           
-            SetUniformMat4(shaderProgram, "model_matrix", lowerArmWorldMatrix);
-            SetUniformMat4(shadowShaderProgram, "model_matrix", lowerArmWorldMatrix);
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
+
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
             // ------------------ RACKET HANDLE  ----------------------------------------------------
             tempColor[0] = 0.4f;        // Value for Red
             tempColor[1] = 0.7f;        // Value for Green
             tempColor[2] = 0.4f;        // Value for Blue
-            // glUniform3fv(colorLocation, 1, tempColor);
-            SetUniformVec3(shaderProgram, "object_color", vec3(0.4, 0.7, 0.4));
-
+            glUniform3fv(colorLocation, 1, tempColor);
+            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset))
                 * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
                 * translate(mat4(1.0f), lowerArmPosOffset)
                 * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
-            // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
             // ------------------ RACKET SURFACE ----------------------------------------------------
@@ -437,8 +372,7 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 0.0f;        // Value for Green
             tempColor[2] = 0.4f;        // Value for Blue
             glUniform3fv(colorLocation, 1, tempColor);
-            // SetUniformVec3(shaderProgram, "object_color", vec3(0.6, 0.0, 0.4));
-
+            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
                 * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
@@ -453,8 +387,6 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 0.3f;        // Value for Blue
             glUniform3fv(colorLocation, 1, tempColor);
-            // SetUniformVec3(shaderProgram, "object_color", vec3(0.3, 1.0, 0.3));
-
             for (int i = -4; i < 5; i++) {
                 vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
@@ -670,8 +602,10 @@ int main(int argc, char*argv[]) {
 
         mat4 viewMatrix = mat4(1.0);
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp) * rotate(mat4(1.0f), radians(cameraAngleX), vec3(0.0f, 1.0f, 0.0f)) *  rotate(mat4(1.0f), radians(cameraAngleY), vec3(1.0f, 0.0f, 0.0f));
-        SetUniformMat4(shaderProgram, "view_matrix", viewMatrix);
-        SetUniformMat4(texturedShaderProgram, "viewMatrix", viewMatrix);
+        GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+
+        setViewMatrix(texturedShaderProgram, viewMatrix);
     }
     
     // Shutdown GLFW
@@ -680,6 +614,16 @@ int main(int argc, char*argv[]) {
     return 0;
 }
 
+void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
+    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+}
+void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
+    glUseProgram(shaderProgram);
+    GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+}
 // shader variable setters
 void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value) {
   glUseProgram(shader_id);

@@ -439,9 +439,8 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 0.6f;        // Value for Green
             tempColor[2] = 0.5f;        // Value for Blue
             glUniform3fv(colorLocation, 1, tempColor);
-            // SetUniformVec3(shaderProgram, "object_color", vec3(0.7, 0.6, 0.5));
+            SetUniformVec3(shaderProgram, "object_color", vec3(0.7, 0.6, 0.5));
 
-            // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
                 * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
