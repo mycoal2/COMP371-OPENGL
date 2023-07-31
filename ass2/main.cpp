@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>  // GLM is an optimized math library with syntax to similar to OpenGL Shading Language
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
+#include <glm/gtc/type_ptr.hpp>
 
 #include<random>       // RANDOM NUMBER GENERATOR - https://cplusplus.com/reference/random/
 
@@ -26,6 +27,10 @@ using namespace std;
 
 void setProjectionMatrix(int shaderProgram, mat4 projectionMatrix);
 void setViewMatrix(int shaderProgram, mat4 viewMatrix);
+void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value);
+void SetUniformVec3(GLuint shader_id, const char* uniform_name, vec3 uniform_value);
+template <class T>
+void SetUniform1Value(GLuint shader_id, const char* uniform_name, T uniform_value);
 
 void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks);
 GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec2> UVs, vector<int> vertexIndices);
@@ -33,6 +38,7 @@ GLuint setupModelEBO(int& vertexCount, vector<glm::vec3> vertices, vector<glm::v
 int createCubeVAO();
 
 GLuint loadTexture(const char* filename);
+
 
 float randomInRange(float lowerBound, float upperBound);
 
@@ -44,6 +50,8 @@ struct TexturedColoredVertex {
     vec3 color;
     vec2 uv;
 };
+
+
 
 float modelScale = 1;
 float upperArmRotationXAngle = 0;
@@ -113,12 +121,47 @@ int main(int argc, char*argv[]) {
     // Load Textures
     GLuint tennisTextureID = loadTexture("assets/textures/tennisTexture.jpg");
     GLuint clayTextureID = loadTexture("assets/textures/clay.jpg");
-    
+
     // Compile and link shaders here ...
     string shaderPathPrefix = "assets/shaders/";
     int shaderProgram           = loadSHADER(shaderPathPrefix + "temp_vertex.glsl", shaderPathPrefix + "temp_fragment.glsl");
     int texturedShaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
+
+    // Dimensions of the shadow texture, which should cover the viewport window size and shouldn't be oversized and waste resources
+    const unsigned int DEPTH_MAP_TEXTURE_SIZE = 1024;
+        
+    // Variable storing index to texture used for shadow mapping
+    GLuint depth_map_texture;
+    // Get the texture
+    glGenTextures(1, &depth_map_texture);
+    // Bind the texture so the next glTex calls affect it
+    glBindTexture(GL_TEXTURE_2D, depth_map_texture);
+    // Create the texture and specify it's attributes, including widthn height, components (only depth is stored, no color information)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, DEPTH_MAP_TEXTURE_SIZE, DEPTH_MAP_TEXTURE_SIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                NULL);
+    // Set texture sampler parameters.
+    // The two calls below tell the texture sampler inside the shader how to upsample and downsample the texture. Here we choose the nearest filtering option, which means we just use the value of the closest pixel to the chosen image coordinate.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // The two calls below tell the texture sampler inside the shader how it should deal with texture coordinates outside of the [0, 1] range. Here we decide to just tile the image.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+    // Variable storing index to framebuffer used for shadow mapping
+    GLuint depth_map_fbo;  // fbo: framebuffer object
+    // Get the framebuffer
+    glGenFramebuffers(1, &depth_map_fbo);
+    // Bind the framebuffer so the next glFramebuffer calls affect it
+    glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+    // Attach the depth map texture to the depth map framebuffer
+    //glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depth_map_texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map_texture, 0);
+	glDrawBuffer(GL_NONE); //disable rendering colors, only write depth values
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
     float fov = 70.0f;
     // Set projection matrix for shader, this won't change
@@ -134,9 +177,7 @@ int main(int argc, char*argv[]) {
                              cameraPosition + cameraLookAt,  // center
                              cameraUp ); // up
     
-    // GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-    // glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-    
+
     setViewMatrix(shaderProgram, viewMatrix);
     setViewMatrix(texturedShaderProgram, viewMatrix);
 
@@ -582,6 +623,21 @@ void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
     glUseProgram(shaderProgram);
     GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
     glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+}
+// shader variable setters
+void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value) {
+  glUseProgram(shader_id);
+  glUniformMatrix4fv(glGetUniformLocation(shader_id, uniform_name), 1, GL_FALSE, &uniform_value[0][0]);
+}
+void SetUniformVec3(GLuint shader_id, const char* uniform_name, vec3 uniform_value) {
+  glUseProgram(shader_id);
+  glUniform3fv(glGetUniformLocation(shader_id, uniform_name), 1, value_ptr(uniform_value));
+}
+template <class T>
+void SetUniform1Value(GLuint shader_id, const char* uniform_name, T uniform_value) {
+  glUseProgram(shader_id);
+  glUniform1i(glGetUniformLocation(shader_id, uniform_name), uniform_value);
+  glUseProgram(0);
 }
 
 void createSPhere(vector<vec3>& vertices, vector<vec3>& normals, vector<vec2>& UV, vector<int>& indices, float radius, int slices, int stacks) {
