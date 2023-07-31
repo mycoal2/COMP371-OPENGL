@@ -55,8 +55,8 @@ struct TexturedColoredVertex {
 
 float modelScale = 1;
 float upperArmRotationXAngle = 0;
-float upperArmRotationYAngle = 0;
 float lowerArmRotationXAngle = 0;
+float racketHandleRotationZAngle = 0;
 
 vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
 vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
@@ -371,6 +371,10 @@ int main(int argc, char*argv[]) {
                 * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
                 * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                 * translate(mat4(1.0f), (lowerArmPosOffset + racketHandlePosOffset))
+
+                * translate(mat4(1.0f),  1.0f * vec3(0.0f, -4.1f, 0.0f))
+                * rotate(mat4(1.0f), radians(racketHandleRotationZAngle), vec3(0.0f, 0.0f, 1.0f))
+                * translate(mat4(1.0f), -1.0f * vec3(0.0f, -4.1f, 0.0f))
                 
                 * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
@@ -391,6 +395,10 @@ int main(int argc, char*argv[]) {
                 * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
                 * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                 * translate(mat4(1.0f), (lowerArmPosOffset + racketHandlePosOffset + racketPosOffset))
+                
+                * translate(mat4(1.0f),  1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset))
+                * rotate(mat4(1.0f), radians(racketHandleRotationZAngle), vec3(0.0f, 0.0f, 1.0f))
+                * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset))
                 
                 * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
@@ -413,6 +421,10 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                     * translate(mat4(1.0f), lowerArmPosOffset + racketHandlePosOffset + racketPosOffset + offset)
                     
+                    * translate(mat4(1.0f),  1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
+                    * rotate(mat4(1.0f), radians(racketHandleRotationZAngle), vec3(0.0f, 0.0f, 1.0f))
+                    * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
+                
                     * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
                 glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -429,6 +441,10 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f)+ offset)
                     * translate(mat4(1.0f), lowerArmPosOffset + racketHandlePosOffset + racketPosOffset)
                     
+                    * translate(mat4(1.0f),  1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
+                    * rotate(mat4(1.0f), radians(racketHandleRotationZAngle), vec3(0.0f, 0.0f, 1.0f))
+                    * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
+                
                     * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
                 glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -550,6 +566,18 @@ int main(int argc, char*argv[]) {
                     lowerArmRotationXAngle += 5.0;
                     update();
                 }
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+            if(racketHandleRotationZAngle < 90) {
+                racketHandleRotationZAngle += 5.0;
+                update();
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+            if(racketHandleRotationZAngle > -90) {
+                racketHandleRotationZAngle -= 5.0;
+                update();
             }
         }
         // --------------------------------------------------------------------------------------
