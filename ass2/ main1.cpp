@@ -56,6 +56,7 @@ struct TexturedColoredVertex {
 float modelScale = 1;
 float upperArmRotationXAngle = 0;
 float upperArmRotationYAngle = 0;
+float lowerArmRotationXAngle = 0;
 
 vec3 lowerArmPosOffset = vec3(5.0f, 6.5f, 0.0f);
 vec3 racketHandlePosOffset = vec3(0.0f, 8.0f, 0.0f);
@@ -346,6 +347,9 @@ int main(int argc, char*argv[]) {
                 * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
                 * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
+                * translate(mat4(1.0f), -1.0f * vec3(0.0f, -2.0f, 0.0f))
+                * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
+                * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                 * translate(mat4(1.0f), lowerArmPosOffset)
                 * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
@@ -360,9 +364,14 @@ int main(int argc, char*argv[]) {
             // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset))
-                * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+
+                * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + racketHandlePosOffset))
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
-                * translate(mat4(1.0f), lowerArmPosOffset)
+                * translate(mat4(1.0f), -1.0f * vec3(0.0f, -2.0f, 0.0f))
+                * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
+                * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
+                * translate(mat4(1.0f), (lowerArmPosOffset + racketHandlePosOffset))
+                
                 * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -375,9 +384,14 @@ int main(int argc, char*argv[]) {
             // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
-                * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+
+                * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + racketHandlePosOffset + racketPosOffset))
                 * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
-                * translate(mat4(1.0f), lowerArmPosOffset)
+                * translate(mat4(1.0f), -1.0f * vec3(0.0f, -2.0f, 0.0f))
+                * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
+                * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
+                * translate(mat4(1.0f), (lowerArmPosOffset + racketHandlePosOffset + racketPosOffset))
+                
                 * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -391,9 +405,14 @@ int main(int argc, char*argv[]) {
                 vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset))
-                    * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + offset))
+
+                    * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + racketHandlePosOffset + racketPosOffset + offset))
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
-                    * translate(mat4(1.0f), lowerArmPosOffset + offset)
+                    * translate(mat4(1.0f), -1.0f * vec3(0.0f, -2.0f, 0.0f))
+                    * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
+                    * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
+                    * translate(mat4(1.0f), lowerArmPosOffset + racketHandlePosOffset + racketPosOffset + offset)
+                    
                     * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
                 glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -402,9 +421,14 @@ int main(int argc, char*argv[]) {
                 vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset + offset))
-                    * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
+
+                    * translate(mat4(1.0f), -1.0f * (lowerArmPosOffset + racketHandlePosOffset + racketPosOffset))
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
-                    * translate(mat4(1.0f), lowerArmPosOffset)
+                    * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -2.0f, 0.0f) + offset))
+                    * rotate(mat4(1.0f), radians(lowerArmRotationXAngle), vec3(1.0f, 0.0f, 0.0f))
+                    * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f)+ offset)
+                    * translate(mat4(1.0f), lowerArmPosOffset + racketHandlePosOffset + racketPosOffset)
+                    
                     * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
                 glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
@@ -502,8 +526,8 @@ int main(int argc, char*argv[]) {
                 upperArmPos += vec3(0.1f * cos(radians(upperArmRotationXAngle)), 0.0f, -0.1f * sin(radians(upperArmRotationXAngle)));
                 update();
             } else {                                            // ROTATE 5 DEGREE CLOCKWISE
-            upperArmRotationXAngle  -= 5.0;
-            update();
+                upperArmRotationXAngle  -= 5.0;
+                update();
             }
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -511,6 +535,10 @@ int main(int argc, char*argv[]) {
                 upperArmPos += vec3(0.0f, 0.1f, 0.0f);
                 update();
             } else {
+                if(lowerArmRotationXAngle > (-90)) {
+                    lowerArmRotationXAngle -= 5.0;
+                    update();
+                }
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
@@ -518,6 +546,10 @@ int main(int argc, char*argv[]) {
                 upperArmPos -= vec3(0.0f, 0.1f, 0.0f);
                 update();
             } else {
+                if(lowerArmRotationXAngle < 90) {
+                    lowerArmRotationXAngle += 5.0;
+                    update();
+                }
             }
         }
         // --------------------------------------------------------------------------------------
