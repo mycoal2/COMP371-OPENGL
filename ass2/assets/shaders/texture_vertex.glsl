@@ -1,21 +1,27 @@
-        #version 330 core
+         #version 330 core
 
-        layout (location = 0) in vec3 aPos;
-        layout (location = 1) in vec3 aColor;
-        layout (location = 2) in vec2 aUV;
+         layout (location = 0) in vec3 aPos;
+         layout (location = 1) in vec3 aNormals;
+         layout (location = 2) in vec2 aUV;
+         
+         uniform mat4 worldMatrix;
+         uniform mat4 viewMatrix = mat4(1.0);  // default value for view matrix (identity)
+         uniform mat4 projectionMatrix = mat4(1.0);
+         uniform mat4 light_view_proj_matrix;
+
+         out vec3 fragment_normal;
+         out vec3 fragment_position;
+         out vec4 fragment_position_light_space;
+
+         out vec2 vertexUV;
         
-        uniform vec3 customColor = vec3(1.0f, 1.0f, 1.0f);
-        uniform mat4 worldMatrix;
-        uniform mat4 viewMatrix = mat4(1.0);  // default value for view matrix (identity)
-        uniform mat4 projectionMatrix = mat4(1.0);
-        
-        out vec3 vertexColor;
-        out vec2 vertexUV;
-        
-        void main()
-        {
-           vertexColor = customColor;
-           mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;
-           gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);
-           vertexUV = aUV;
-        }
+         void main()
+         {
+            fragment_normal = mat3(worldMatrix) * aNormals;
+            fragment_position = vec3(worldMatrix * vec4(aPos, 1.0));
+            fragment_position_light_space = light_view_proj_matrix * vec4(fragment_position, 1.0);
+
+            mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;
+            gl_Position = modelViewProjection * vec4(aPos, 1.0);
+            vertexUV = aUV;
+         }
