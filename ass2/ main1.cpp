@@ -180,7 +180,28 @@ int main(int argc, char*argv[]) {
     setViewMatrix(texturedShaderProgram, viewMatrix);
     setProjectionMatrix(texturedShaderProgram, projectionMatrix);
 
+    // -------------- LIGHTING -----------------------------------
     SetUniformVec3(texturedShaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
+    float lightAngleOuter = 50.0;
+    float lightAngleInner = 30.0;
+    // Set light cutoff angles on scene shader
+    SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
+    SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
+    vec3 lightPosition =   vec3(0.0f,10.0f,0.0f); // the location of the light in 3D space
+    SetUniformVec3(texturedShaderProgram, "light_position", lightPosition);
+    vec3 lightFocus(0.0, -1.0, 0.0);      // the point in 3D space the light "looks" at
+    vec3 lightDirection = normalize(lightFocus - lightPosition);
+    SetUniformVec3(texturedShaderProgram, "light_direction", lightDirection);
+    float lightNearPlane = 1.0f;
+    float lightFarPlane = 180.0f;
+    SetUniform1Value(texturedShaderProgram, "light_near_plane", lightNearPlane);
+    SetUniform1Value(texturedShaderProgram, "light_far_plane", lightFarPlane);
+    mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
+    //perspective(20.0f, (float)DEPTH_MAP_TEXTURE_SIZE / (float)DEPTH_MAP_TEXTURE_SIZE, lightNearPlane, lightFarPlane);
+    mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
+    mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+    // SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+    SetUniformMat4(texturedShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
 
     int vao = createCubeVAO();
 
@@ -459,7 +480,7 @@ int main(int argc, char*argv[]) {
             glBindTexture(GL_TEXTURE_2D, tennisTextureID);
 
 
-            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 15.0f, 0.0f))
+            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(10.0f, 5.0f, 0.0f))
                 * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
             GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
             glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
