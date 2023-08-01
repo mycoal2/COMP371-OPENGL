@@ -87,6 +87,11 @@ void update() {
 bool keyPressed = false;
 bool shift = false;
 int renderingMode = GL_TRIANGLES;
+bool toggleTexture = true;
+bool xPressed = false;
+bool toggleShadow = true;
+bool bPressed = false;
+
 GLFWwindow* window = nullptr;
 
 int main(int argc, char*argv[]) {
@@ -123,6 +128,7 @@ int main(int argc, char*argv[]) {
     GLuint tennisTextureID = loadTexture("assets/textures/tennisTexture.jpg");
     GLuint clayTextureID = loadTexture("assets/textures/clay.jpg");
     GLuint defaultTextureID = loadTexture("assets/textures/white.png");
+    GLuint blueTextureID = loadTexture("assets/textures/blue.png");
 
     // Compile and link shaders here ...
     string shaderPathPrefix = "assets/shaders/";
@@ -180,28 +186,6 @@ int main(int argc, char*argv[]) {
     setViewMatrix(texturedShaderProgram, viewMatrix);
     setProjectionMatrix(texturedShaderProgram, projectionMatrix);
 
-    // -------------- LIGHTING -----------------------------------
-    SetUniformVec3(texturedShaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
-    float lightAngleOuter = 50.0;
-    float lightAngleInner = 30.0;
-    // Set light cutoff angles on scene shader
-    SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
-    SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
-    vec3 lightPosition =   vec3(0.0f,10.0f,0.0f); // the location of the light in 3D space
-    SetUniformVec3(texturedShaderProgram, "light_position", lightPosition);
-    vec3 lightFocus(0.0, -1.0, 0.0);      // the point in 3D space the light "looks" at
-    vec3 lightDirection = normalize(lightFocus - lightPosition);
-    SetUniformVec3(texturedShaderProgram, "light_direction", lightDirection);
-    float lightNearPlane = 1.0f;
-    float lightFarPlane = 180.0f;
-    SetUniform1Value(texturedShaderProgram, "light_near_plane", lightNearPlane);
-    SetUniform1Value(texturedShaderProgram, "light_far_plane", lightFarPlane);
-    mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
-    //perspective(20.0f, (float)DEPTH_MAP_TEXTURE_SIZE / (float)DEPTH_MAP_TEXTURE_SIZE, lightNearPlane, lightFarPlane);
-    mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
-    mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-    // SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
-    SetUniformMat4(texturedShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
 
     int vao = createCubeVAO();
 
@@ -239,6 +223,29 @@ int main(int argc, char*argv[]) {
         // Each frame, reset color of each pixel to glClearColor
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // -------------- LIGHTING -----------------------------------
+        SetUniformVec3(texturedShaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
+        float lightAngleOuter = 50.0;
+        float lightAngleInner = 30.0;
+        // Set light cutoff angles on scene shader
+        SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
+        SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
+        vec3 lightPosition = vec3(0.0f, 50.0f, 0.0f); // the location of the light in 3D space
+        SetUniformVec3(texturedShaderProgram, "light_position", lightPosition);
+        vec3 lightFocus = vec3(0.0, 0.0, 0.0);      // the point in 3D space the light "looks" at
+        vec3 lightDirection = normalize(lightFocus - lightPosition);
+        SetUniformVec3(texturedShaderProgram, "light_direction", lightDirection);
+        float lightNearPlane = 1.0f;
+        float lightFarPlane = 180.0f;
+        SetUniform1Value(texturedShaderProgram, "light_near_plane", lightNearPlane);
+        SetUniform1Value(texturedShaderProgram, "light_far_plane", lightFarPlane);
+        mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
+        //perspective(20.0f, (float)DEPTH_MAP_TEXTURE_SIZE / (float)DEPTH_MAP_TEXTURE_SIZE, lightNearPlane, lightFarPlane);
+        mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
+        mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+        // SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+        SetUniformMat4(texturedShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
         GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
 
@@ -253,7 +260,12 @@ int main(int argc, char*argv[]) {
 
         glActiveTexture(GL_TEXTURE0);
         GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
-        glBindTexture(GL_TEXTURE_2D, clayTextureID);
+        if(toggleTexture) {
+            glBindTexture(GL_TEXTURE_2D, clayTextureID);            
+        } else {
+            glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+        }
+
         glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
 
         GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
@@ -398,10 +410,17 @@ int main(int argc, char*argv[]) {
             glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
 
             // ------------------ RACKET SURFACE ----------------------------------------------------
-            tempColor[0] = 0.6f;        // Value for Red
-            tempColor[1] = 0.0f;        // Value for Green
-            tempColor[2] = 0.2f;        // Value for Blue
+            tempColor[0] = 0.3f;        // Value for Red
+            tempColor[1] = 0.3f;        // Value for Green
+            tempColor[2] = 0.3f;        // Value for Blue
             glUniform3fv(texColorLocation, 1, tempColor);
+            // glUniform3fv(texColorLocation, 1, texColor);
+            if(toggleTexture) {
+                glBindTexture(GL_TEXTURE_2D, blueTextureID);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            }
+
             // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
             mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                 * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
@@ -476,9 +495,11 @@ int main(int argc, char*argv[]) {
 
             glUseProgram(texturedShaderProgram);
             glUniform3fv(texColorLocation, 1, texColor);
-
-            glBindTexture(GL_TEXTURE_2D, tennisTextureID);
-
+            if(toggleTexture) {
+                glBindTexture(GL_TEXTURE_2D, tennisTextureID);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            }
 
             mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(10.0f, 5.0f, 0.0f))
                 * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
@@ -629,6 +650,24 @@ int main(int argc, char*argv[]) {
             renderingMode = GL_POINTS;
         }
 
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) { // TOGGLE TEXTURE
+            if(!xPressed) {
+                toggleTexture = !toggleTexture;
+                xPressed = true;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_RELEASE) {   // check for release so it doesn't do it constantly
+                xPressed = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) { // TOGGLE TEXTURE
+            if(!xPressed) {
+                toggleShadow = !toggleShadow;
+                bPressed = true;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE) {   // check for release so it doesn't do it constantly
+                bPressed = false;
+        }
         // --------------------------------------------------------------------------------------
         // --------------------- CAMERA PAN AND TILT  -------------------------------------------
         // --------------------------------------------------------------------------------------

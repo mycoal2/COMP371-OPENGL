@@ -14,7 +14,7 @@
 
          const float shading_ambient_strength    = 0.1;
          const float shading_diffuse_strength    = 0.6;
-         const float shading_specular_strength   = 0.3;
+         const float shading_specular_strength   = 0.9;
 
          uniform float light_cutoff_outer;
          uniform float light_cutoff_inner;
