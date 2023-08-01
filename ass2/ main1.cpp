@@ -225,8 +225,8 @@ int main(int argc, char*argv[]) {
 
         // -------------- LIGHTING -----------------------------------
         SetUniformVec3(texturedShaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
-        float lightAngleOuter = 50.0;
-        float lightAngleInner = 30.0;
+        float lightAngleOuter = 30.0;
+        float lightAngleInner = 10.0;
         // Set light cutoff angles on scene shader
         SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
         SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));

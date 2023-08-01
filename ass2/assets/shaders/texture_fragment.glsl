@@ -87,5 +87,5 @@
             
             vec3 colorLighting = (specular + diffuse + ambient);
 
-            FragColor = textureColor * vec4(colorLighting, 1.0f) * vec4(customColor, 1.0f) ;
+            FragColor = vec4(colorLighting, 1.0f) * vec4(customColor, 1.0f) * textureColor;
          }
