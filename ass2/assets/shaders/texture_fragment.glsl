@@ -13,8 +13,8 @@
          uniform vec3 light_direction;
 
          const float shading_ambient_strength    = 0.1;
-         const float shading_diffuse_strength    = 0.6;
-         const float shading_specular_strength   = 0.9;
+         const float shading_diffuse_strength    = 0.5;
+         const float shading_specular_strength   = 1.0;
 
          uniform float light_cutoff_outer;
          uniform float light_cutoff_inner;
@@ -57,7 +57,7 @@
             // get depth of current fragment from light's perspective
             float current_depth = normalized_device_coordinates.z;
             // check whether current frag pos is in shadow
-            float bias = 0.01;  // bias applied in depth map: see shadow_vertex.glsl
+            float bias = 0.04;  // bias applied in depth map: see shadow_vertex.glsl
             return ((current_depth - bias) < closest_depth) ? 1.0 : 0.0;
          }
 
@@ -80,7 +80,7 @@
             vec3 diffuse = vec3(0.0f);
             vec3 specular = vec3(0.0f);
 
-            float scalar = spotlight_scalar();
+            float scalar = shadow_scalar() * spotlight_scalar();
             ambient = ambient_color(light_color);
             diffuse = scalar * diffuse_color(light_color, light_position);
             specular = scalar * specular_color(light_color, light_position);

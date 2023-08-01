@@ -230,7 +230,7 @@ int main(int argc, char*argv[]) {
         // Set light cutoff angles on scene shader
         SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
         SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
-        vec3 lightPosition = vec3(0.0f, 50.0f, 0.0f); // the location of the light in 3D space
+        vec3 lightPosition = vec3(20.0f, 10.0f, 0.0f); // the location of the light in 3D space
         SetUniformVec3(texturedShaderProgram, "light_position", lightPosition);
         vec3 lightFocus = vec3(0.0, 0.0, 0.0);      // the point in 3D space the light "looks" at
         vec3 lightDirection = normalize(lightFocus - lightPosition);
@@ -250,7 +250,73 @@ int main(int argc, char*argv[]) {
         GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
 
         // Draw Geometry
-        glBindVertexArray(vao);
+
+        // --------------------------------------------------------------------------------------
+        // ------------------- TENNIS BALL ------------------------------------------------------
+        // --------------------------------------------------------------------------------------
+        {
+            // Use proper shader
+            glUseProgram(shadowShaderProgram);
+            // Use proper image output size
+            glViewport(0, 0, DEPTH_MAP_TEXTURE_SIZE, DEPTH_MAP_TEXTURE_SIZE);
+            // Bind depth map texture as output framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, depth_map_fbo);
+            // Clear depth data on the framebuffer
+            glClear(GL_DEPTH_BUFFER_BIT);
+            // Bind geometry
+
+            glBindVertexArray(activeVAO);
+
+            // glUseProgram(texturedShaderProgram);
+            glUniform3fv(texColorLocation, 1, texColor);
+            if(toggleTexture) {
+                glBindTexture(GL_TEXTURE_2D, tennisTextureID);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            }
+
+            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(10.0f, 5.0f, 0.0f))
+                * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
+            SetUniformMat4(shadowShaderProgram, "model_matrix", sphereWorldMatrix);
+
+            // Draw geometry
+            glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
+            // Unbind geometry
+            glBindVertexArray(0);
+        } 
+        {
+            glUseProgram(texturedShaderProgram);
+            // Use proper image output size
+            // Side note: we get the size from the framebuffer instead of using WIDTH and HEIGHT because of a bug with highDPI displays
+            int width, height;
+            glfwGetFramebufferSize(window, &width, &height);
+            glViewport(0, 0, width, height);
+            // Bind screen as output framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            // Clear color and depth data on framebuffer
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glBindVertexArray(activeVAO);
+
+            // glUseProgram(texturedShaderProgram);
+            glUniform3fv(texColorLocation, 1, texColor);
+            if(toggleTexture) {
+                glBindTexture(GL_TEXTURE_2D, tennisTextureID);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            }
+
+            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(10.0f, 5.0f, 0.0f))
+                * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
+            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
+            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
+
+            // Draw geometry
+            glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
+            // Unbind geometry
+            glBindVertexArray(0);
+        }
 
         // ---------------------------------------------------------------------
         // -------------------------- CLAY GROUND ------------------------------
@@ -267,6 +333,7 @@ int main(int argc, char*argv[]) {
         }
 
         glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
+        glBindVertexArray(vao);
 
         GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
         mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
@@ -484,32 +551,11 @@ int main(int argc, char*argv[]) {
                     * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
                 glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+
             }
         }
-        // --------------------------------------------------------------------------------------
-        // ------------------- TENNIS BALL ------------------------------------------------------
-        // --------------------------------------------------------------------------------------
-        {
-            glBindVertexArray(0);
-            glBindVertexArray(activeVAO);
 
-            glUseProgram(texturedShaderProgram);
-            glUniform3fv(texColorLocation, 1, texColor);
-            if(toggleTexture) {
-                glBindTexture(GL_TEXTURE_2D, tennisTextureID);
-            } else {
-                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            }
 
-            mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(10.0f, 5.0f, 0.0f))
-                * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
-            // Draw geometry
-            glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
-            // Unbind geometry
-            glBindVertexArray(0);
-        }
         
          // End Frame
         glfwSwapBuffers(window);
