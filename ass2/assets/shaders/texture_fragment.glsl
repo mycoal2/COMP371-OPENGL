@@ -8,11 +8,13 @@
          uniform sampler2D textureSampler;
          uniform mat4 textureMatrix = mat4(1.0f);
          
+         uniform bool shadowToggle = true;
+
          uniform vec3 light_color;      
          uniform vec3 light_position;
          uniform vec3 light_direction;
 
-         const float shading_ambient_strength    = 0.1;
+         const float shading_ambient_strength    = 0.2;
          const float shading_diffuse_strength    = 0.6;
          const float shading_specular_strength   = 0.5;
 
@@ -80,8 +82,14 @@
             vec3 specular = vec3(0.0f);
 
             vec4 textureColor = texture(textureSampler, vertexUV );
-
-            float scalar = shadow_scalar() * spotlight_scalar();
+            
+            float shadow;
+            if(shadowToggle) {
+               shadow = shadow_scalar();
+            } else {
+               shadow = 1.0f;
+            }
+            float scalar = shadow * spotlight_scalar();
             ambient = ambient_color(light_color);
             diffuse = scalar * diffuse_color(light_color, light_position);
             specular = scalar * specular_color(light_color, light_position);

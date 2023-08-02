@@ -288,18 +288,7 @@ int main(int argc, char*argv[]) {
             // ---------------------------------------------------------------------
             // -------------------------- CLAY GROUND ------------------------------
             // ---------------------------------------------------------------------
-            // glUniform3fv(texColorLocation, 1, texColor);
 
-            // glActiveTexture(GL_TEXTURE2);
-            // GLuint textureLocation = glGetUniformLocation(shaderProgram, "textureSampler");
-            // if(toggleTexture) {
-            //     glBindTexture(GL_TEXTURE_2D, clayTextureID);            
-            // } else {
-            //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            // }
-
-            // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
-            
             mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
 
@@ -312,14 +301,6 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             //  ----------------------- Draw Grid 100x100 -------------------------------------------
             // --------------------------------------------------------------------------------------
-            // GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-            // // Change shader Color to Yellow
-            // tempColor[0] = 0.9f;        // Value for Red
-            // tempColor[1] = 0.9f;        // Value for Green
-            // tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            // // glUniform1i(textureLocation, 0);
 
             for(float x = -50; x < 50; x++) {
                 mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
@@ -342,10 +323,6 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             // -------------------- COORDINATE AXIS -------------------------------------------------
             // --------------------------------------------------------------------------------------
-            // tempColor[0] = 1.0f;        // Value for Red
-            // tempColor[1] = 1.0f;        // Value for Green
-            // tempColor[2] = 1.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
             // THIS IS 1 UNIT 
             mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
             SetUniformMat4(shadowShaderProgram, "model_matrix", middleWorldMatrix);
@@ -355,11 +332,7 @@ int main(int argc, char*argv[]) {
             glBindVertexArray(0);
 
             // -------------------- X AXIS -------------------------------------------
-            // tempColor[0] = 1.0f;        // Value for Red
-            // tempColor[1] = 0.0f;        // Value for Green
-            // tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            
+        
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
             SetUniformMat4(shadowShaderProgram, "model_matrix", gridXWorldMatrix);
@@ -368,10 +341,6 @@ int main(int argc, char*argv[]) {
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             glBindVertexArray(0);
             // -------------------- Z AXIS ----------------------------------------------------------
-            // tempColor[0] = 0.0f;        // Value for Red
-            // tempColor[1] = 1.0f;        // Value for Green
-            // tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
@@ -381,10 +350,6 @@ int main(int argc, char*argv[]) {
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             glBindVertexArray(0);
             // -------------------- Y AXIS ----------------------------------------------------------
-            // tempColor[0] = 0.0f;        // Value for Red
-            // tempColor[1] = 0.0f;        // Value for Green
-            // tempColor[2] = 1.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
@@ -399,10 +364,6 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             {
                 // ------------------ UPPER ARM ---------------------------------------------------------
-                // tempColor[0] = 0.8f;        // Value for Red
-                // tempColor[1] = 0.7f;        // Value for Green
-                // tempColor[2] = 0.6f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
                 mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), upperArmPos)
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
@@ -415,10 +376,6 @@ int main(int argc, char*argv[]) {
                 glBindVertexArray(0);
 
                 // ------------------ LOWER ARM ---------------------------------------------------------
-                // tempColor[0] = 0.7f;        // Value for Red
-                // tempColor[1] = 0.6f;        // Value for Green
-                // tempColor[2] = 0.5f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
                 mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
                     * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
@@ -434,16 +391,6 @@ int main(int argc, char*argv[]) {
                 glBindVertexArray(0);
 
                 // ------------------ RACKET HANDLE  ----------------------------------------------------
-                // tempColor[0] = 0.4f;        // Value for Red
-                // tempColor[1] = 0.7f;        // Value for Green
-                // tempColor[2] = 0.4f;        // Value for Blue
-                // // glUniform3fv(texColorLocation, 1, tempColor);
-                // glUniform3fv(texColorLocation, 1, texColor);
-                // if(toggleTexture) {
-                //     glBindTexture(GL_TEXTURE_2D, steelTextureID);
-                // } else {
-                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                // }
                 mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset))
 
@@ -465,15 +412,6 @@ int main(int argc, char*argv[]) {
                 glBindVertexArray(0);
 
                 // ------------------ RACKET SURFACE ----------------------------------------------------
-                // tempColor[0] = 0.3f;        // Value for Red
-                // tempColor[1] = 0.3f;        // Value for Green
-                // tempColor[2] = 0.3f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                // if(toggleTexture) {
-                //     glBindTexture(GL_TEXTURE_2D, blueTextureID);
-                // } else {
-                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                // }
 
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
@@ -496,10 +434,6 @@ int main(int argc, char*argv[]) {
                 glBindVertexArray(0);
 
                 // ------------------ RACKET NET --------------------------------------------------------
-                // tempColor[0] = 0.3f;        // Value for Red
-                // tempColor[1] = 1.0f;        // Value for Green
-                // tempColor[2] = 0.3f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
                 for (int i = -4; i < 5; i++) {
                     vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                     mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
@@ -551,14 +485,6 @@ int main(int argc, char*argv[]) {
             // ------------------- TENNIS BALL ------------------------------------------------------
             // --------------------------------------------------------------------------------------
             {
-                // glUniform3fv(texColorLocation, 1, texColor);
-
-                // if(toggleTexture) {
-                //     glBindTexture(GL_TEXTURE_2D, tennisTextureID);
-                // } else {
-                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                // }
-
                 mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(-10.0f, 5.0f, -5.0f))
                     * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
                 SetUniformMat4(shadowShaderProgram, "model_matrix", sphereWorldMatrix);
@@ -570,7 +496,7 @@ int main(int argc, char*argv[]) {
             }
         }
         // ----------------------------------------------------------------------------
-        // ---------------------- RENDER SCENE AFTER SHADOW ---------------------------
+        // ---------------------- RENDER SCENE AFTER    SHADOW ---------------------------
         // ----------------------------------------------------------------------------
         {
             glUseProgram(shaderProgram);
@@ -583,20 +509,11 @@ int main(int argc, char*argv[]) {
             // Bind screen as output framebuffer
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             // Clear color and depth data on framebuffer
-            // glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            // glActiveTexture(GL_TEXTURE0);
 
             // ---------------------------------------------------------------------
             // -------------------------- CLAY GROUND ------------------------------
             // ---------------------------------------------------------------------
-            // glUniform3fv(texColorLocation, 1, texColor);
-
-            // GLuint textureLocation = glGetUniformLocation(shaderProgram, "textureSampler");
-            
-
-            // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
-            
             mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
             SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
@@ -614,15 +531,9 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             //  ----------------------- Draw Grid 100x100 -------------------------------------------
             // --------------------------------------------------------------------------------------
-            // GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
-            // // Change shader Color to Yellow
             tempColor[0] = 0.9f;        // Value for Red
             tempColor[1] = 0.9f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            // glUniform1i(textureLocation, 0);
-
             for(float x = -50; x < 50; x++) {
                 mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(0.1f, 0.1f, 100.0f));
@@ -651,9 +562,7 @@ int main(int argc, char*argv[]) {
             tempColor[0] = 1.0f;        // Value for Red
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 1.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
             // THIS IS 1 UNIT 
-            // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
             mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
             SetUniformMat4(shaderProgram, "worldMatrix", middleWorldMatrix);
             SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
@@ -667,8 +576,6 @@ int main(int argc, char*argv[]) {
             tempColor[0] = 1.0f;        // Value for Red
             tempColor[1] = 0.0f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
             SetUniformMat4(shaderProgram, "worldMatrix", gridXWorldMatrix);
@@ -682,8 +589,6 @@ int main(int argc, char*argv[]) {
             tempColor[0] = 0.0f;        // Value for Red
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            
             mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
             SetUniformMat4(shaderProgram, "worldMatrix", gridZWorldMatrix);
@@ -697,8 +602,6 @@ int main(int argc, char*argv[]) {
             tempColor[0] = 0.0f;        // Value for Red
             tempColor[1] = 0.0f;        // Value for Green
             tempColor[2] = 1.0f;        // Value for Blue
-            // glUniform3fv(texColorLocation, 1, tempColor);
-            
             mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
             SetUniformMat4(shaderProgram, "worldMatrix", gridYWorldMatrix);
@@ -717,8 +620,6 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.8f;        // Value for Red
                 tempColor[1] = 0.7f;        // Value for Green
                 tempColor[2] = 0.6f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
                 mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), upperArmPos)
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
@@ -735,8 +636,6 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.7f;        // Value for Red
                 tempColor[1] = 0.6f;        // Value for Green
                 tempColor[2] = 0.5f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
                 mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
                     * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
@@ -757,8 +656,6 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.4f;        // Value for Red
                 tempColor[1] = 0.7f;        // Value for Green
                 tempColor[2] = 0.4f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                // glUniform3fv(texColorLocation, 1, texColor);
                 if(toggleTexture) {
                     glBindTexture(GL_TEXTURE_2D, steelTextureID);
                 } else {
@@ -795,9 +692,6 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.3f;        // Value for Red
                 tempColor[1] = 0.3f;        // Value for Green
                 tempColor[2] = 0.3f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                // glUniform3fv(texColorLocation, 1, texColor);
-
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
 
@@ -828,7 +722,6 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.3f;        // Value for Red
                 tempColor[1] = 1.0f;        // Value for Green
                 tempColor[2] = 0.3f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
                 for (int i = -4; i < 5; i++) {
                     vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                     mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
@@ -884,8 +777,6 @@ int main(int argc, char*argv[]) {
             // ------------------- TENNIS BALL ------------------------------------------------------
             // --------------------------------------------------------------------------------------
             {
-
-                // glUniform3fv(texColorLocation, 1, texColor);
                 mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(-10.0f, 5.0f, -5.0f))
                     * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
                 SetUniformMat4(shaderProgram, "worldMatrix", sphereWorldMatrix);
@@ -922,9 +813,7 @@ int main(int argc, char*argv[]) {
             glfwSetWindowShouldClose(window, true);
         }
 
-        // --------------------------------------------------------------------------------------
         // ------------------------------ REPOSITION MODEL --------------------------------------
-        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
             if(!keyPressed) {
                 float randomX = randomInRange(-25.0f, 25.0f);
@@ -940,9 +829,7 @@ int main(int argc, char*argv[]) {
                 keyPressed = false;
         }
 
-        // --------------------------------------------------------------------------------------
         // ------------------------------ MODEL SCALE -------------------------------------------
-        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {      // SCALE UP
             modelScale += 0.01;
         }
@@ -950,9 +837,7 @@ int main(int argc, char*argv[]) {
             modelScale -= 0.01;
         }
 
-        // --------------------------------------------------------------------------------------
         // ------------------------------ UPDATE MODEL POSITION ---------------------------------
-        // --------------------------------------------------------------------------------------
         shift = false;
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) { 
             shift = true;
@@ -1009,9 +894,7 @@ int main(int argc, char*argv[]) {
                 update();
             }
         }
-        // --------------------------------------------------------------------------------------
         // ------------------------------ CHANGE WORLD ORIENTATION ------------------------------
-        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {      // move camera to the left
             cameraAngleX += 1.0f;
         }
@@ -1030,9 +913,7 @@ int main(int argc, char*argv[]) {
             cameraAngleZ = 0.0f;
         }
 
-        // --------------------------------------------------------------------------------------
         // ------------------- RENDERING MODE ---------------------------------------------------
-        // --------------------------------------------------------------------------------------
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) { // RENDER TRIANGLES   
             renderingMode = GL_TRIANGLES;
         }
@@ -1053,18 +934,17 @@ int main(int argc, char*argv[]) {
                 xPressed = false;
         }
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) { // TOGGLE TEXTURE
-            if(!xPressed) {
+            if(!bPressed) {
                 toggleShadow = !toggleShadow;
-                SetUniform1Value(shaderProgram, "ambient", 1.0f);
+                SetUniform1Value(shaderProgram, "shadowToggle", toggleShadow);
                 bPressed = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE) {   // check for release so it doesn't do it constantly
                 bPressed = false;
         }
-        // --------------------------------------------------------------------------------------
+
         // --------------------- CAMERA PAN AND TILT  -------------------------------------------
-        // --------------------------------------------------------------------------------------
         const float cameraAngularSpeed = 15.0f;
         float theta;
         float phi;
@@ -1087,9 +967,7 @@ int main(int argc, char*argv[]) {
         cameraLookAt = vec3(cosf(phi)*cosf(theta), sinf(phi), -cosf(phi)*sinf(theta));
         vec3 cameraSideVector = glm::cross(cameraLookAt, vec3(0.0f, 1.0f, 0.0f));
 
-        // --------------------------------------------------------------------------------------
         // --------------------- ZOOM IN AND ZOOM OUT -------------------------------------------
-        // --------------------------------------------------------------------------------------
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             if(dx < 0) {                // ZOOM OUT
                 if (fov < 179.0) {
@@ -1233,52 +1111,52 @@ int createCubeVAO() {
     // Cube model
     const TexturedColoredVertex vertexArray[] = {  // position,                            normals
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)), //left - red
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 10.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(10.0f, 1.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 1.0f)),
 
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(10.0f, 10.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(-1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(10.0f, 10.0f)), // far - blue
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)), // far - blue
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 5.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(10.0f, 10.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f),  vec3(0.0f, 0.0f, -1.0f), vec2(5.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(10.0f, 10.0f)), // bottom - turquoise
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)), // bottom - turquoise
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f),vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(10.0f, 10.0f)),
-    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, -1.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 5.0f)),
     TexturedColoredVertex(vec3(-0.5f,-0.5f,-0.5f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 10.0f)), // near - green
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)), // near - green
     TexturedColoredVertex(vec3(-0.5f,-0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(10.0f, 10.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 10.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f),  vec3(0.0f, 0.0f, 1.0f), vec2(5.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(10.0f, 10.0f)), // right - purple
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)), // right - purple
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 0.0f)),
 
     TexturedColoredVertex(vec3(0.5f,-0.5f,-0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(10.0f, 10.0f)),
-    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(5.0f, 5.0f)),
+    TexturedColoredVertex(vec3(0.5f,-0.5f, 0.5f), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 5.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(10.0f, 10.0f)), // top - yellow
-    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(10.0f, 0.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)), // top - yellow
+    TexturedColoredVertex(vec3(0.5f, 0.5f,-0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 0.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
 
-    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(10.0f, 10.0f)),
+    TexturedColoredVertex(vec3(0.5f, 0.5f, 0.5f),  vec3(0.0f, 1.0f, 0.0f), vec2(5.0f, 5.0f)),
     TexturedColoredVertex(vec3(-0.5f, 0.5f,-0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f)),
-    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 10.0f))
+    TexturedColoredVertex(vec3(-0.5f, 0.5f, 0.5f), vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 5.0f))
     };
         
     // Create a vertex array
