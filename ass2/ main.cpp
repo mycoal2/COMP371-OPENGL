@@ -134,7 +134,7 @@ int main(int argc, char*argv[]) {
     // Compile and link shaders here ...
     string shaderPathPrefix = "assets/shaders/";
     // int shaderProgram           = loadSHADER(shaderPathPrefix + "temp_vertex.glsl", shaderPathPrefix + "temp_fragment.glsl");
-    int texturedShaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
+    int shaderProgram   = loadSHADER(shaderPathPrefix + "texture_vertex.glsl", shaderPathPrefix + "texture_fragment.glsl");
     int shadowShaderProgram     = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
 
     // Dimensions of the shadow texture, which should cover the viewport window size and shouldn't be oversized and waste resources
@@ -174,7 +174,7 @@ int main(int argc, char*argv[]) {
     float fov = 70.0f;
     // Set projection matrix for shader, this won't change
     mat4 projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
-                                             800.0f / 600.0f,  // aspect ratio
+                                             1024.0f / 768.0f,  // aspect ratio
                                              0.01f, 100.0f);   // near and far (near > 0)
 
     // Set initial view matrix
@@ -183,8 +183,8 @@ int main(int argc, char*argv[]) {
                              cameraUp ); // up
     
 
-    setViewMatrix(texturedShaderProgram, viewMatrix);
-    setProjectionMatrix(texturedShaderProgram, projectionMatrix);
+    setViewMatrix(shaderProgram, viewMatrix);
+    setProjectionMatrix(shaderProgram, projectionMatrix);
 
 
     int vao = createCubeVAO();
@@ -214,35 +214,49 @@ int main(int argc, char*argv[]) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     float texColor[3] = {1.0f, 1.0f, 1.0f};
+
+        GLint shadowMapUniform = glGetUniformLocation(shaderProgram, "shadow_map");
+      glUniform1i(shadowMapUniform, 0); // Texture unit 1 is now bound to texture1
+
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, tennisTextureID);
+      GLint texture1Uniform = glGetUniformLocation(shaderProgram, "textureSampler");
+      glUniform1i(texture1Uniform, 1); // Texture unit 1 is now bound to texture1
+
+      glActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_2D, clayTextureID);
+      glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+
+      glActiveTexture(GL_TEXTURE3);
+      glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+      glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
+
+      glActiveTexture(GL_TEXTURE4);
+      glBindTexture(GL_TEXTURE_2D, steelTextureID);
+      glUniform1i(texture1Uniform, 4); // Texture unit 4 is now bound to texture1
+
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
     {
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
-        
-        // Each frame, reset color of each pixel to glClearColor
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // -------------- LIGHTING -----------------------------------
-        SetUniformVec3(texturedShaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
-        vec3 lightPosition = vec3(0.0f, 30.0f, 0.0f); // the location of the light in 3D space
+        SetUniformVec3(shaderProgram, "light_color", vec3(1.0, 1.0, 1.0));
+        vec3 lightPosition = vec3(0.0f,30.0f, 0.0f); // the location of the light in 3D space
         // vec3(30.0f * sinf(glfwGetTime()), 30.0f, 30.0f * cosf(glfwGetTime()));
 
-        SetUniformVec3(texturedShaderProgram, "light_position", lightPosition);
-        vec3 lightFocus = vec3(10.0, -100.0, 0.0);      // the point in 3D space the light "looks" at
+        vec3 lightFocus = vec3(0.0, 0.0, 1.0);      // the point in 3D space the light "looks" at
         vec3 lightDirection = normalize(lightFocus - lightPosition);
-        SetUniformVec3(texturedShaderProgram, "light_direction", lightDirection);
 
-        float lightNearPlane = 10.0f;
-        float lightFarPlane = 70.0f;
-        SetUniform1Value(texturedShaderProgram, "light_near_plane", lightNearPlane);
-        SetUniform1Value(texturedShaderProgram, "light_far_plane", lightFarPlane);
+        float lightNearPlane = 1.0f;
+        float lightFarPlane = 180.0f;
 
-        float lightAngleOuter = 600.0;
-        float lightAngleInner = 30.0;
+        float lightAngleOuter = 30.0;
+        float lightAngleInner = 20.0;
         // Set light cutoff angles on scene shader
-        SetUniform1Value(texturedShaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
-        SetUniform1Value(texturedShaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
+        SetUniform1Value(shaderProgram, "light_cutoff_inner", cos(radians(lightAngleInner)));
+        SetUniform1Value(shaderProgram, "light_cutoff_outer", cos(radians(lightAngleOuter)));
         
         
         mat4 lightProjectionMatrix = frustum(-1.0f, 1.0f, -1.0f, 1.0f, lightNearPlane, lightFarPlane);
@@ -250,10 +264,17 @@ int main(int argc, char*argv[]) {
         mat4 lightViewMatrix = lookAt(lightPosition, lightFocus, vec3(0.0f, 1.0f, 0.0f));
         mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
         SetUniformMat4(shadowShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
-        SetUniformMat4(texturedShaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+        SetUniformMat4(shaderProgram, "light_view_proj_matrix", lightSpaceMatrix);
+
+        SetUniform1Value(shaderProgram, "light_near_plane", lightNearPlane);
+        SetUniform1Value(shaderProgram, "light_far_plane", lightFarPlane);
+        
+        SetUniformVec3(shaderProgram, "light_position", lightPosition);
+
+        SetUniformVec3(shaderProgram, "light_direction", lightDirection);
 
         float tempColor[3] = {0.5f, 0.5f, 0.5f};    // Change Color to Grey
-        GLuint texColorLocation = glGetUniformLocation(texturedShaderProgram, "customColor");
+        GLuint texColorLocation = glGetUniformLocation(shaderProgram, "customColor");
 
         // ------------------------- SHADOW PASS -------------------------------
         {
@@ -267,22 +288,21 @@ int main(int argc, char*argv[]) {
             // ---------------------------------------------------------------------
             // -------------------------- CLAY GROUND ------------------------------
             // ---------------------------------------------------------------------
-            glUniform3fv(texColorLocation, 1, texColor);
+            // glUniform3fv(texColorLocation, 1, texColor);
 
-            glActiveTexture(GL_TEXTURE2);
-            GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
-            if(toggleTexture) {
-                glBindTexture(GL_TEXTURE_2D, clayTextureID);            
-            } else {
-                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            }
+            // glActiveTexture(GL_TEXTURE2);
+            // GLuint textureLocation = glGetUniformLocation(shaderProgram, "textureSampler");
+            // if(toggleTexture) {
+            //     glBindTexture(GL_TEXTURE_2D, clayTextureID);            
+            // } else {
+            //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            // }
 
             // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
             
-            GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
             mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
-            glUniformMatrix4fv(groundMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
+
             SetUniformMat4(shadowShaderProgram, "model_matrix", groundWorldMatrix);
 
             glBindVertexArray(vao);
@@ -292,29 +312,29 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             //  ----------------------- Draw Grid 100x100 -------------------------------------------
             // --------------------------------------------------------------------------------------
-            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
-            // Change shader Color to Yellow
-            tempColor[0] = 0.9f;        // Value for Red
-            tempColor[1] = 0.9f;        // Value for Green
-            tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
-            glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            // glUniform1i(textureLocation, 0);
+            // GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+            // // Change shader Color to Yellow
+            // tempColor[0] = 0.9f;        // Value for Red
+            // tempColor[1] = 0.9f;        // Value for Green
+            // tempColor[2] = 0.0f;        // Value for Blue
+            // glUniform3fv(texColorLocation, 1, tempColor);
+            // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            // // glUniform1i(textureLocation, 0);
 
             for(float x = -50; x < 50; x++) {
                 mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(0.1f, 0.1f, 100.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
                 SetUniformMat4(shadowShaderProgram, "model_matrix", gridXWorldMatrix);
 
                 glBindVertexArray(vao);
                 glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-                
+                glBindVertexArray(0);
+
                 mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.10f, 0.10f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
                 SetUniformMat4(shadowShaderProgram, "model_matrix", gridZWorldMatrix);
 
+                glBindVertexArray(vao);
                 glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
                 glBindVertexArray(0);
             }
@@ -322,55 +342,55 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             // -------------------- COORDINATE AXIS -------------------------------------------------
             // --------------------------------------------------------------------------------------
-            tempColor[0] = 1.0f;        // Value for Red
-            tempColor[1] = 1.0f;        // Value for Green
-            tempColor[2] = 1.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // tempColor[0] = 1.0f;        // Value for Red
+            // tempColor[1] = 1.0f;        // Value for Green
+            // tempColor[2] = 1.0f;        // Value for Blue
+            // glUniform3fv(texColorLocation, 1, tempColor);
             // THIS IS 1 UNIT 
-            // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
             mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
             SetUniformMat4(shadowShaderProgram, "model_matrix", middleWorldMatrix);
 
             glBindVertexArray(vao);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            glBindVertexArray(0);
+
             // -------------------- X AXIS -------------------------------------------
-            tempColor[0] = 1.0f;        // Value for Red
-            tempColor[1] = 0.0f;        // Value for Green
-            tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // tempColor[0] = 1.0f;        // Value for Red
+            // tempColor[1] = 0.0f;        // Value for Green
+            // tempColor[2] = 0.0f;        // Value for Blue
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
-                            SetUniformMat4(shadowShaderProgram, "model_matrix", gridXWorldMatrix);
+            SetUniformMat4(shadowShaderProgram, "model_matrix", gridXWorldMatrix);
 
+            glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-
+            glBindVertexArray(0);
             // -------------------- Z AXIS ----------------------------------------------------------
-            tempColor[0] = 0.0f;        // Value for Red
-            tempColor[1] = 1.0f;        // Value for Green
-            tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // tempColor[0] = 0.0f;        // Value for Red
+            // tempColor[1] = 1.0f;        // Value for Green
+            // tempColor[2] = 0.0f;        // Value for Blue
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
-                            SetUniformMat4(shadowShaderProgram, "model_matrix", gridZWorldMatrix);
+            SetUniformMat4(shadowShaderProgram, "model_matrix", gridZWorldMatrix);
 
+            glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-
+            glBindVertexArray(0);
             // -------------------- Y AXIS ----------------------------------------------------------
-            tempColor[0] = 0.0f;        // Value for Red
-            tempColor[1] = 0.0f;        // Value for Green
-            tempColor[2] = 1.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // tempColor[0] = 0.0f;        // Value for Red
+            // tempColor[1] = 0.0f;        // Value for Green
+            // tempColor[2] = 1.0f;        // Value for Blue
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
-                            SetUniformMat4(shadowShaderProgram, "model_matrix", gridYWorldMatrix);
+            SetUniformMat4(shadowShaderProgram, "model_matrix", gridYWorldMatrix);
 
+            glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             glBindVertexArray(0);
 
@@ -379,28 +399,26 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             {
                 // ------------------ UPPER ARM ---------------------------------------------------------
-                tempColor[0] = 0.8f;        // Value for Red
-                tempColor[1] = 0.7f;        // Value for Green
-                tempColor[2] = 0.6f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
-                // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
+                // tempColor[0] = 0.8f;        // Value for Red
+                // tempColor[1] = 0.7f;        // Value for Green
+                // tempColor[2] = 0.6f;        // Value for Blue
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), upperArmPos)
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
                     * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f))
                     * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
-                                SetUniformMat4(shadowShaderProgram, "model_matrix", upperArmWorldMatrix);
+                SetUniformMat4(shadowShaderProgram, "model_matrix", upperArmWorldMatrix);
 
                 glBindVertexArray(vao);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                glBindVertexArray(0);
 
                 // ------------------ LOWER ARM ---------------------------------------------------------
-                tempColor[0] = 0.7f;        // Value for Red
-                tempColor[1] = 0.6f;        // Value for Green
-                tempColor[2] = 0.5f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
-                // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
+                // tempColor[0] = 0.7f;        // Value for Red
+                // tempColor[1] = 0.6f;        // Value for Green
+                // tempColor[2] = 0.5f;        // Value for Blue
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
                     * translate(mat4(1.0f), -1.0f * lowerArmPosOffset)
@@ -410,24 +428,22 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                     * translate(mat4(1.0f), lowerArmPosOffset)
                     * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
-                                SetUniformMat4(shadowShaderProgram, "model_matrix", lowerArmWorldMatrix);
-
-
+                SetUniformMat4(shadowShaderProgram, "model_matrix", lowerArmWorldMatrix);
+                glBindVertexArray(vao);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                glBindVertexArray(0);
 
                 // ------------------ RACKET HANDLE  ----------------------------------------------------
-                tempColor[0] = 0.4f;        // Value for Red
-                tempColor[1] = 0.7f;        // Value for Green
-                tempColor[2] = 0.4f;        // Value for Blue
-                // glUniform3fv(texColorLocation, 1, tempColor);
-                glUniform3fv(texColorLocation, 1, texColor);
-                if(toggleTexture) {
-                    glBindTexture(GL_TEXTURE_2D, steelTextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                }
-                // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
+                // tempColor[0] = 0.4f;        // Value for Red
+                // tempColor[1] = 0.7f;        // Value for Green
+                // tempColor[2] = 0.4f;        // Value for Blue
+                // // glUniform3fv(texColorLocation, 1, tempColor);
+                // glUniform3fv(texColorLocation, 1, texColor);
+                // if(toggleTexture) {
+                //     glBindTexture(GL_TEXTURE_2D, steelTextureID);
+                // } else {
+                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+                // }
                 mat4 racketHandleWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (lowerArmPos + racketHandlePosOffset))
 
@@ -443,24 +459,22 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), -1.0f * vec3(0.0f, -4.1f, 0.0f))
                     
                     * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
-                // glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
                 SetUniformMat4(shadowShaderProgram, "model_matrix", racketHandleWorldMatrix);
-
+                glBindVertexArray(vao);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                glBindVertexArray(0);
 
                 // ------------------ RACKET SURFACE ----------------------------------------------------
-                tempColor[0] = 0.3f;        // Value for Red
-                tempColor[1] = 0.3f;        // Value for Green
-                tempColor[2] = 0.3f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
-                // glUniform3fv(texColorLocation, 1, texColor);
-                if(toggleTexture) {
-                    glBindTexture(GL_TEXTURE_2D, blueTextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                }
+                // tempColor[0] = 0.3f;        // Value for Red
+                // tempColor[1] = 0.3f;        // Value for Green
+                // tempColor[2] = 0.3f;        // Value for Blue
+                // glUniform3fv(texColorLocation, 1, tempColor);
+                // if(toggleTexture) {
+                //     glBindTexture(GL_TEXTURE_2D, blueTextureID);
+                // } else {
+                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+                // }
 
-                // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
 
@@ -476,16 +490,16 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset))
                     
                     * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                                SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
-
+                SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
+                glBindVertexArray(vao);
                 glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                glBindVertexArray(0);
 
                 // ------------------ RACKET NET --------------------------------------------------------
-                tempColor[0] = 0.3f;        // Value for Red
-                tempColor[1] = 1.0f;        // Value for Green
-                tempColor[2] = 0.3f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
+                // tempColor[0] = 0.3f;        // Value for Red
+                // tempColor[1] = 1.0f;        // Value for Green
+                // tempColor[2] = 0.3f;        // Value for Blue
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 for (int i = -4; i < 5; i++) {
                     vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                     mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
@@ -503,10 +517,11 @@ int main(int argc, char*argv[]) {
                         * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
                     
                         * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
-                    glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                                    SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
-
+                    SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
+                    glBindVertexArray(vao);
                     glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                    glBindVertexArray(0);
+
                 }
                 for (int i = -7; i < 8; i++) {
                     vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
@@ -525,9 +540,9 @@ int main(int argc, char*argv[]) {
                         * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
                     
                         * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
-                    glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                                    SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
-
+                        
+                    SetUniformMat4(shadowShaderProgram, "model_matrix", racketWorldMatrix);
+                    glBindVertexArray(vao);
                     glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
                     glBindVertexArray(0);
                 }
@@ -536,22 +551,19 @@ int main(int argc, char*argv[]) {
             // ------------------- TENNIS BALL ------------------------------------------------------
             // --------------------------------------------------------------------------------------
             {
-                glBindVertexArray(activeVAO);
-                glUniform3fv(texColorLocation, 1, texColor);
+                // glUniform3fv(texColorLocation, 1, texColor);
 
-                if(toggleTexture) {
-                    glBindTexture(GL_TEXTURE_2D, tennisTextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                }
+                // if(toggleTexture) {
+                //     glBindTexture(GL_TEXTURE_2D, tennisTextureID);
+                // } else {
+                //     glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+                // }
 
                 mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(-10.0f, 5.0f, -5.0f))
                     * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-                GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
-                                SetUniformMat4(shadowShaderProgram, "model_matrix", sphereWorldMatrix);
-
+                SetUniformMat4(shadowShaderProgram, "model_matrix", sphereWorldMatrix);
                 // Draw geometry
+                glBindVertexArray(activeVAO);
                 glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
                 // Unbind geometry
                 glBindVertexArray(0);
@@ -561,7 +573,10 @@ int main(int argc, char*argv[]) {
         // ---------------------- RENDER SCENE AFTER SHADOW ---------------------------
         // ----------------------------------------------------------------------------
         {
-            glUseProgram(texturedShaderProgram);
+            glUseProgram(shaderProgram);
+
+            glUniform1i(shadowMapUniform, 0); 
+
             int width, height;
             glfwGetFramebufferSize(window, &width, &height);
             glViewport(0, 0, width, height);
@@ -570,27 +585,28 @@ int main(int argc, char*argv[]) {
             // Clear color and depth data on framebuffer
             // glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glActiveTexture(GL_TEXTURE0);
+            // glActiveTexture(GL_TEXTURE0);
 
             // ---------------------------------------------------------------------
             // -------------------------- CLAY GROUND ------------------------------
             // ---------------------------------------------------------------------
-            glUniform3fv(texColorLocation, 1, texColor);
+            // glUniform3fv(texColorLocation, 1, texColor);
 
-            glActiveTexture(GL_TEXTURE0);
-            GLuint textureLocation = glGetUniformLocation(texturedShaderProgram, "textureSampler");
-            if(toggleTexture) {
-                glBindTexture(GL_TEXTURE_2D, clayTextureID);            
-            } else {
-                glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-            }
+            // GLuint textureLocation = glGetUniformLocation(shaderProgram, "textureSampler");
+            
 
             // glUniform1i(textureLocation, 0);                // Set our Texture sampler to user Texture Unit 0
             
-            GLuint groundMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
             mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.01f, 100.0f));
-            glUniformMatrix4fv(groundMatrixLocation, 1, GL_FALSE, &groundWorldMatrix[0][0]);
+            SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+            if(toggleTexture) {
+                glUniform1i(texture1Uniform, 2); // Texture unit 2 is now bound to texture1
+            } else {
+                glUniform1i(texture1Uniform, 3); // Texture unit 3 is now bound to texture1
+            }
+
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
             glBindVertexArray(0);
@@ -598,27 +614,33 @@ int main(int argc, char*argv[]) {
             // --------------------------------------------------------------------------------------
             //  ----------------------- Draw Grid 100x100 -------------------------------------------
             // --------------------------------------------------------------------------------------
-            GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
-            // Change shader Color to Yellow
+            // GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+            // // Change shader Color to Yellow
             tempColor[0] = 0.9f;        // Value for Red
             tempColor[1] = 0.9f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
-            glBindTexture(GL_TEXTURE_2D, defaultTextureID);
+            // glUniform3fv(texColorLocation, 1, tempColor);
+            // glBindTexture(GL_TEXTURE_2D, defaultTextureID);
             // glUniform1i(textureLocation, 0);
 
             for(float x = -50; x < 50; x++) {
                 mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(0.1f, 0.1f, 100.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
-
+                SetUniformMat4(shaderProgram, "worldMatrix", gridXWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
                 glBindVertexArray(vao);
                 glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-                
+                glBindVertexArray(0);
+
                 mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, x)) 
                 * scale(mat4(1.0f), vec3(100.0f, 0.10f, 0.10f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
-
+                SetUniformMat4(shaderProgram, "worldMatrix", gridZWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
+                glBindVertexArray(vao);
                 glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
                 glBindVertexArray(0);
             }
@@ -629,45 +651,62 @@ int main(int argc, char*argv[]) {
             tempColor[0] = 1.0f;        // Value for Red
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 1.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // glUniform3fv(texColorLocation, 1, tempColor);
             // THIS IS 1 UNIT 
             // mat4 middleWorldMatrix = translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.5f)) * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
             mat4 middleWorldMatrix = scale(mat4(1.0f), vec3(0.501f, 0.501f, 0.501f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &middleWorldMatrix[0][0]);
+            SetUniformMat4(shaderProgram, "worldMatrix", middleWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
             glBindVertexArray(vao);
             glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
+            glBindVertexArray(0);
+
             // -------------------- X AXIS -------------------------------------------
             tempColor[0] = 1.0f;        // Value for Red
             tempColor[1] = 0.0f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(2.5f, 0.0f, 0.0f)) 
             * scale(mat4(1.0f), vec3(5.0f, 0.5f, 0.5f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridXWorldMatrix[0][0]);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-
+            SetUniformMat4(shaderProgram, "worldMatrix", gridXWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
+            glBindVertexArray(0);
             // -------------------- Z AXIS ----------------------------------------------------------
             tempColor[0] = 0.0f;        // Value for Red
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 0.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridZWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, 2.5f)) 
             * scale(mat4(1.0f), vec3(0.5f, 0.5f, 5.0f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridZWorldMatrix[0][0]);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
-
+            SetUniformMat4(shaderProgram, "worldMatrix", gridZWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
+            glBindVertexArray(0);
             // -------------------- Y AXIS ----------------------------------------------------------
             tempColor[0] = 0.0f;        // Value for Red
             tempColor[1] = 0.0f;        // Value for Green
             tempColor[2] = 1.0f;        // Value for Blue
-            glUniform3fv(texColorLocation, 1, tempColor);
+            // glUniform3fv(texColorLocation, 1, tempColor);
             
             mat4 gridYWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f)) 
             * scale(mat4(1.0f), vec3(0.5f, 5.0f, 0.5f));
-            glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &gridYWorldMatrix[0][0]);
-            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0
+            SetUniformMat4(shaderProgram, "worldMatrix", gridYWorldMatrix);
+            SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+            glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+               
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices, starting at index 0      
             glBindVertexArray(0);
 
             // --------------------------------------------------------------------------------------
@@ -678,22 +717,25 @@ int main(int argc, char*argv[]) {
                 tempColor[0] = 0.8f;        // Value for Red
                 tempColor[1] = 0.7f;        // Value for Green
                 tempColor[2] = 0.6f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 // vec3 upperArmPos = vec3(10.0f, 5.0f, -20.0f);
                 mat4 upperArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), upperArmPos)
                     * rotate(mat4(1.0f), radians(upperArmRotationXAngle), vec3(0.0f, 1.0f, 0.0f))
                     * rotate(mat4(1.0f), radians(30.0f), vec3(0.0f, 0.0f, 1.0f))
                     * scale(mat4(1.0f), vec3(12.0f, 2.0f, 2.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &upperArmWorldMatrix[0][0]);
+                SetUniformMat4(shaderProgram, "worldMatrix", upperArmWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                
                 glBindVertexArray(vao);
-                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
+                glBindVertexArray(0);
                 // ------------------ LOWER ARM ---------------------------------------------------------
                 tempColor[0] = 0.7f;        // Value for Red
                 tempColor[1] = 0.6f;        // Value for Green
                 tempColor[2] = 0.5f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
                 mat4 lowerArmWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (upperArmPos + lowerArmPosOffset))
@@ -704,16 +746,19 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), vec3(0.0f, -2.0f, 0.0f))
                     * translate(mat4(1.0f), lowerArmPosOffset)
                     * scale(mat4(1.0f), vec3(1.5f, 8.0f, 1.5f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &lowerArmWorldMatrix[0][0]);
-
-                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-
+                SetUniformMat4(shaderProgram, "worldMatrix", lowerArmWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                
+                glBindVertexArray(vao);
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
+                glBindVertexArray(0);
                 // ------------------ RACKET HANDLE  ----------------------------------------------------
                 tempColor[0] = 0.4f;        // Value for Red
                 tempColor[1] = 0.7f;        // Value for Green
                 tempColor[2] = 0.4f;        // Value for Blue
                 // glUniform3fv(texColorLocation, 1, tempColor);
-                glUniform3fv(texColorLocation, 1, texColor);
+                // glUniform3fv(texColorLocation, 1, texColor);
                 if(toggleTexture) {
                     glBindTexture(GL_TEXTURE_2D, steelTextureID);
                 } else {
@@ -735,22 +780,24 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), -1.0f * vec3(0.0f, -4.1f, 0.0f))
                     
                     * scale(mat4(1.0f), vec3(0.75f, 8.0f, 0.75f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketHandleWorldMatrix[0][0]);
-                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-
+                SetUniformMat4(shaderProgram, "worldMatrix", racketHandleWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                
+                if(toggleTexture) {
+                glUniform1i(texture1Uniform, 4); // Texture unit 2 is now bound to texture1
+                } else {
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                }
+                glBindVertexArray(vao);
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
+                glBindVertexArray(0);
                 // ------------------ RACKET SURFACE ----------------------------------------------------
                 tempColor[0] = 0.3f;        // Value for Red
                 tempColor[1] = 0.3f;        // Value for Green
                 tempColor[2] = 0.3f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 // glUniform3fv(texColorLocation, 1, texColor);
-                if(toggleTexture) {
-                    glBindTexture(GL_TEXTURE_2D, blueTextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                }
 
-                // vec3 lowerArmPos = vec3(upperArmPos.x + 6.0f, upperArmPos.y + 4.0f, upperArmPos.z + 0.0f);
                 mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
                     * translate(mat4(1.0f), (racketHandlePos + racketPosOffset))
 
@@ -766,14 +813,22 @@ int main(int argc, char*argv[]) {
                     * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset))
                     
                     * scale(mat4(1.0f), vec3(5.0f, 8.0f, 1.0f));
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
-
+                SetUniformMat4(shaderProgram, "worldMatrix", racketWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                
+                if(toggleTexture) {
+                glUniform1i(texture1Uniform, 4); // Texture unit 2 is now bound to texture1
+                } else {
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                }
+                glBindVertexArray(vao);
+                glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
+                glBindVertexArray(0);
                 // ------------------ RACKET NET --------------------------------------------------------
                 tempColor[0] = 0.3f;        // Value for Red
                 tempColor[1] = 1.0f;        // Value for Green
                 tempColor[2] = 0.3f;        // Value for Blue
-                glUniform3fv(texColorLocation, 1, tempColor);
+                // glUniform3fv(texColorLocation, 1, tempColor);
                 for (int i = -4; i < 5; i++) {
                     vec3 offset = vec3(i * 0.5f, 0.0f, 0.0f);
                     mat4 racketWorldMatrix = scale(mat4(1.0f), vec3(modelScale, modelScale, modelScale))
@@ -791,8 +846,13 @@ int main(int argc, char*argv[]) {
                         * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
                     
                         * scale(mat4(1.0f), vec3(0.1f, 7.0f, 1.1f));
-                    glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                    glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                    SetUniformMat4(shaderProgram, "worldMatrix", racketWorldMatrix);
+                    SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                    glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                    
+                    glBindVertexArray(vao);
+                    glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
+                    glBindVertexArray(0);
                 }
                 for (int i = -7; i < 8; i++) {
                     vec3 offset = vec3(0.0f, i * 0.5f, 0.0f);
@@ -811,8 +871,12 @@ int main(int argc, char*argv[]) {
                         * translate(mat4(1.0f), -1.0f * (vec3(0.0f, -4.1f, 0.0f) - racketPosOffset - offset))
                     
                         * scale(mat4(1.0f), vec3(4.0f, 0.1f, 1.1f));
-                    glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &racketWorldMatrix[0][0]);
-                    glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0
+                    SetUniformMat4(shaderProgram, "worldMatrix", racketWorldMatrix);
+                    SetUniformVec3(shaderProgram, "customColor", vec3(tempColor[0], tempColor[1], tempColor[2]));
+                    glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                    
+                    glBindVertexArray(vao);
+                    glDrawArrays(renderingMode, 0, 36); // 36 vertices, starting at index 0      
                     glBindVertexArray(0);
                 }
             }
@@ -820,22 +884,20 @@ int main(int argc, char*argv[]) {
             // ------------------- TENNIS BALL ------------------------------------------------------
             // --------------------------------------------------------------------------------------
             {
-                glBindVertexArray(activeVAO);
 
-                glUniform3fv(texColorLocation, 1, texColor);
-                if(toggleTexture) {
-                    glBindTexture(GL_TEXTURE_2D, tennisTextureID);
-                } else {
-                    glBindTexture(GL_TEXTURE_2D, defaultTextureID);
-                }
-
+                // glUniform3fv(texColorLocation, 1, texColor);
                 mat4 sphereWorldMatrix = translate(mat4(1.0f), vec3(-10.0f, 5.0f, -5.0f))
                     * scale(mat4(1.0f), vec3(1.0f, 1.0f, 1.0f));
-                GLuint worldMatrixLocation = glGetUniformLocation(texturedShaderProgram, "worldMatrix");
-                glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &sphereWorldMatrix[0][0]);
-                // Draw geometry
+                SetUniformMat4(shaderProgram, "worldMatrix", sphereWorldMatrix);
+                SetUniformVec3(shaderProgram, "customColor", vec3(1.0f, 1.0f, 1.0f));
+                
+                if(toggleTexture) {
+                glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
+                } else {
+                glUniform1i(texture1Uniform, 3); // Texture unit 2 is now bound to texture1
+                }
+                glBindVertexArray(activeVAO);
                 glDrawElements(renderingMode, activeVertices, GL_UNSIGNED_INT, 0);
-                // Unbind geometry
                 glBindVertexArray(0);
             }
         }
@@ -993,6 +1055,7 @@ int main(int argc, char*argv[]) {
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) { // TOGGLE TEXTURE
             if(!xPressed) {
                 toggleShadow = !toggleShadow;
+                SetUniform1Value(shaderProgram, "ambient", 1.0f);
                 bPressed = true;
             }
         }
@@ -1038,17 +1101,17 @@ int main(int argc, char*argv[]) {
                 }
             }
             projectionMatrix = glm::perspective(glm::radians(fov),            // field of view in degrees
-                                             800.0f / 600.0f,  // aspect ratio
+                                             1024.0f / 768.0f,  // aspect ratio
                                              0.01f, 100.0f);   // near and far (near > 0)
     
 
-            setProjectionMatrix(texturedShaderProgram, projectionMatrix);
+            setProjectionMatrix(shaderProgram, projectionMatrix);
         }
 
         mat4 viewMatrix = mat4(1.0);
         viewMatrix = lookAt(cameraPosition, cameraPosition + cameraLookAt, cameraUp) * rotate(mat4(1.0f), radians(cameraAngleX), vec3(0.0f, 1.0f, 0.0f)) *  rotate(mat4(1.0f), radians(cameraAngleY), vec3(1.0f, 0.0f, 0.0f));
 
-        setViewMatrix(texturedShaderProgram, viewMatrix);
+        setViewMatrix(shaderProgram, viewMatrix);
     }
     
     // Shutdown GLFW
@@ -1075,13 +1138,11 @@ void setViewMatrix(int shaderProgram, mat4 viewMatrix) {
 void SetUniformMat4(GLuint shader_id, const char* uniform_name, mat4 uniform_value) {
     glUseProgram(shader_id);
     glUniformMatrix4fv(glGetUniformLocation(shader_id, uniform_name), 1, GL_FALSE, &uniform_value[0][0]);
-    glUseProgram(0);
 
 }
 void SetUniformVec3(GLuint shader_id, const char* uniform_name, vec3 uniform_value) {
     glUseProgram(shader_id);
     glUniform3fv(glGetUniformLocation(shader_id, uniform_name), 1, value_ptr(uniform_value));
-    glUseProgram(0);
 
 }
 template <class T>

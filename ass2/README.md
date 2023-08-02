@@ -8,8 +8,12 @@
 | shift + a    | moves model left  |
 | shift + s    | moves model right   |
 | shift + d    | moves model down   |
-|     a        | rotates model anticlockwise |
-|     d        | rotates model clockwise  |
+|     a        | rotates upper arm anticlockwise |
+|     d        | rotates upper arm clockwise  |
+|     w        | rotates lower arm forward |
+|     s        | rotates lower arm backward |
+|     q        | rotates model left |
+|     e        | rotates model right |
 | spacebar     | re-position model randomly |
 |     u        | scale up model   |
 |     j        | scale down model   |
@@ -23,3 +27,5 @@
 | left-click   | Zoom in and out  |
 | right-click  | Pan camera  |
 | middle-click | tilt camera  |
+| X  | Toggle texture  |
+| B  | Toggle shadow  |
