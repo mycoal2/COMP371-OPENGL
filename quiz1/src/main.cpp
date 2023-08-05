@@ -308,6 +308,8 @@ int main(int argc, char*argv[])
     bool keyPressed = false;        // So that key does not get registered more than once
     bool shift = false;
     int renderingMode = GL_TRIANGLES;
+    bool reversed = false;
+    bool followCam = true;
 
     vec3 cameraPosition(0.0f, 25.0f, 45.0f);
     vec3 cameraLookAt(0.0f, 0.0f, 00.0f);
@@ -344,12 +346,6 @@ int main(int argc, char*argv[])
     glfwGetCursorPos(window, &lastMousePosX, &lastMousePosY);
     //glEnable(GL_CULL_FACE);    // DISABLED SO THAT IT SEES INSIDE OF SKYBOX
     glEnable(GL_DEPTH_TEST);
-
-
-   
-    
-    bool reversed = false;
-    bool followCam = true;
 
     // Entering Main Loop
     while(!glfwWindowShouldClose(window))
