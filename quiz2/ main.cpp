@@ -62,6 +62,7 @@ float cameraHorizontalAngle = 90.0f;
 float cameraVerticalAngle = -30.0f;
 float cameraSpeed = 1.0f;
 
+float spinAngle = 90.0f;
 
 
 // CHARACTER SIZE 3 X 4
@@ -290,16 +291,20 @@ int main(int argc, char*argv[]) {
         SetUniformVec3(shaderProgram, "light_color", vec3(1.0f, 1.0f, 1.0f));
         SetUniformVec3(shaderProgram, "light_color1", vec3(1.0f, 0.0f, 0.0f));
         vec3 lightPosition; // the location of the light in 3D space
+        vec3 lightFocus;      // the point in 3D space the light "looks" at
+
         if(toggleCircle){
-            lightPosition = cameraPosition; // the location of the light in 3D space
+            lightPosition = cameraPosition+vec3(2.0f * cos(radians(spinAngle)), 1.0f, 2.0f * sin(radians(spinAngle))); // the location of the light in 3D space
+            lightFocus = vec3(0.0f, 10.0f, 0.0f);      // the point in 3D space the light "looks" at
+
         } else {
-            lightPosition = vec3(5.0f, 15.0f, 0.0f); // the location of the light in 3D space
+            lightPosition = vec3(10.0f, 60.0f, 0.0f); // the location of the light in 3D space
+            lightFocus = vec3(-5.0f, 0.0f, 1.0f);      // the point in 3D space the light "looks" at
+
         }
-        // vec3(30.0f * sinf(glfwGetTime()), 30.0f, 30.0f * cosf(glfwGetTime()));
         vec3 lightPosition1 = cameraPosition;
 
-        vec3 lightFocus = vec3(0.0f, 0.0f, -1.0f);      // the point in 3D space the light "looks" at
-        vec3 lightFocus1 = vec3(0.0f, -1.0f, 0.0f);      // the point in 3D space the light "looks" at
+        vec3 lightFocus1 = vec3(0.0f, 1.0f, 1.0f);      // the point in 3D space the light "looks" at
 
         vec3 lightDirection = normalize(lightFocus - lightPosition);
         vec3 lightDirection1 = normalize(lightFocus1 - lightPosition1);
@@ -358,7 +363,7 @@ int main(int argc, char*argv[]) {
             glBindVertexArray(0);
             // -------------------- SKYBOX  ----------------------------------
             mat4 skyWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 20.0f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 50.0f, 95.0f));
+                * scale(mat4(1.0f), vec3(100.0f, 100.0f, 95.0f));
             SetUniformMat4(shadowShaderProgram, "model_matrix", skyWorldMatrix);
             
             glBindVertexArray(vao);
@@ -515,7 +520,7 @@ int main(int argc, char*argv[]) {
             // ------------------ CHARACTER O --------------------------
             // HORIZONTAL BAR 1
             charWorldMatrix = translate(mat4(1.0f), characterOmovement) 
-                * translate(mat4(1.0f), vec3(0.0f, 2.5f, 0.0f))
+                * translate(mat4(1.0f), vec3(0.0f, 1.5f, 0.0f))
                 * rotate(mat4(1.0f), radians(racketORotationY), vec3(0.0f, 1.0f, 0.0f))
                 * scale(mat4(1.0f), characterHorizontalSize);
             SetUniformMat4(shadowShaderProgram, "model_matrix", charWorldMatrix);
@@ -526,7 +531,7 @@ int main(int argc, char*argv[]) {
             // HORIZONTAL BAR 2
             charWorldMatrix = translate(mat4(1.0f), characterOmovement) 
                 * rotate(mat4(1.0f), radians(racketORotationY), vec3(0.0f, 1.0f, 0.0f))
-                * translate(mat4(1.0f), vec3(0.0f, -2.5f, 0.0f)) 
+                * translate(mat4(1.0f), vec3(0.0f, -1.5f, 0.0f)) 
                 * scale(mat4(1.0f), characterHorizontalSize);
             SetUniformMat4(shadowShaderProgram, "model_matrix", charWorldMatrix);
 
@@ -536,7 +541,7 @@ int main(int argc, char*argv[]) {
             // VERTICAL BAR 1
             charWorldMatrix = translate(mat4(1.0f), characterOmovement) 
                 * rotate(mat4(1.0f), radians(racketORotationY), vec3(0.0f, 1.0f, 0.0f))
-                * translate(mat4(1.0f), vec3(0.0f, 0.0f, 1.5f)) 
+                * translate(mat4(1.0f), vec3(0.0f, 0.0f, 1.25f)) 
                 * scale(mat4(1.0f), characterVerticalSize);
             SetUniformMat4(shadowShaderProgram, "model_matrix", charWorldMatrix);
 
@@ -546,7 +551,7 @@ int main(int argc, char*argv[]) {
             // VERTICAL BAR 2
             charWorldMatrix = translate(mat4(1.0f), characterOmovement) 
                 * rotate(mat4(1.0f), radians(racketORotationY), vec3(0.0f, 1.0f, 0.0f))
-                * translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.5f)) 
+                * translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.25f)) 
                 * scale(mat4(1.0f), characterVerticalSize);
             SetUniformMat4(shadowShaderProgram, "model_matrix", charWorldMatrix);
 
@@ -804,7 +809,7 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 0.71f;        // Value for Green
             tempColor[2] = 0.86f;        // Value for Blue
             mat4 skyWorldMatrix = translate(mat4(1.0f), vec3(0.0f, 20.0f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(100.0f, 50.0f, 95.0f));
+                * scale(mat4(1.0f), vec3(100.0f, 100.0f, 95.0f));
             SetUniformMat4(shaderProgram, "worldMatrix", skyWorldMatrix);
             SetUniformVec3(shaderProgram, "customColor", tempColor);
             if(toggleTexture) {
@@ -823,7 +828,7 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 0.6f;        // Value for Green
             tempColor[2] = 0.4f;        // Value for Blue
             mat4 groundWorldMatrix = translate(mat4(1.0f), vec3(0.0f, -0.26f, 0.0f)) 
-                * scale(mat4(1.0f), vec3(78.0f, 0.001f, 36.0f));
+                * scale(mat4(1.0f), vec3(78.0f, 0.01f, 36.0f));
             SetUniformMat4(shaderProgram, "worldMatrix", groundWorldMatrix);
             SetUniformVec3(shaderProgram, "customColor", tempColor);
             glUniform1i(texture1Uniform, 1); // Texture unit 2 is now bound to texture1
@@ -839,7 +844,7 @@ int main(int argc, char*argv[]) {
             tempColor[1] = 1.0f;        // Value for Green
             tempColor[2] = 1.0f;        // Value for Blue
             for(float x = -39; x < 39; x++) {
-                mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.25f, 0.0f)) 
+                mat4 gridXWorldMatrix = translate(mat4(1.0f), vec3(x, -0.24f, 0.0f)) 
                 * scale(mat4(1.0f), vec3(0.05f, 0.05f, 36.0f));
                 SetUniformMat4(shaderProgram, "worldMatrix", gridXWorldMatrix);
                 SetUniformVec3(shaderProgram, "customColor", tempColor);
@@ -1626,14 +1631,17 @@ int main(int argc, char*argv[]) {
         // ------------------------------ CHANGE WORLD ORIENTATION ------------------------------
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {  // move camera to the left
             if(toggleCircle) {
-                cameraAngleX += 1.0f;
+                spinAngle--;
+                cameraPosition = vec3(-40.0f * cos(radians(spinAngle)), 25.0f, 40.0f * sin(radians(spinAngle)));
             } else {
                 cameraPosition -= cameraSideVector * currentCameraSpeed * dt;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { // move camera to the right
             if(toggleCircle) {
-                cameraAngleX -= 1.0f;
+                spinAngle++;
+                cameraPosition = vec3(-40.0f * cos(radians(spinAngle)), 25.0f, 40.0f * sin(radians(spinAngle)));
+
             } else {
                 cameraPosition += cameraSideVector * currentCameraSpeed * dt;
             }
